@@ -5,10 +5,10 @@
 
     <groupId>io.github.hiwepy</groupId>
     <artifactId>zxing-extension</artifactId>
-    <version>2.0.x.20260630-SNAPSHOT</version>
+    <version>1.0.x.20260630-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>${project.groupId}:${project.artifactId}</name>
-    <description>ZXing Extensions - QR Code and Bar Code utilities, independent of Spring Boot, JDK 17 line</description>
+    <description>ZXing Extensions - QR Code and Bar Code utilities, JDK 1.8 line</description>
     <url>https://github.com/hiwepy/${project.artifactId}</url>
 
     <licenses>
@@ -61,8 +61,7 @@
     </distributionManagement>
 
     <properties>
-        <java.version>17</java.version>
-        <maven.compiler.release>${java.version}</maven.compiler.release>
+        <java.version>1.8</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -420,6 +419,11 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-gpg-plugin</artifactId>
             </plugin>
+            <!-- 中央仓库发布插件：通过Central Publishing Portal发布 -->
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+            </plugin>
         </plugins>
     </build>
 
@@ -431,6 +435,7 @@
             </activation>
             <properties>
                 <additionalparam>-Xdoclint:none -Xlint:unchecked</additionalparam>
+        <checker-qual.version>3.48.3</checker-qual.version>
             </properties>
         </profile>
         <profile>
