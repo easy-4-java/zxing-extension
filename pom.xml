@@ -8,7 +8,7 @@
     <version>3.0.x.20260630-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>${project.groupId}:${project.artifactId}</name>
-    <description>ZXing Extensions - QR Code and Bar Code utilities, independent of Spring Boot, JDK 21 line</description>
+    <description>ZXing Extensions - QR Code and Bar Code utilities, independent of Spring Boot, JDK 17 line</description>
     <url>https://github.com/hiwepy/${project.artifactId}</url>
 
     <licenses>
@@ -65,32 +65,54 @@
         <maven.compiler.release>${java.version}</maven.compiler.release>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
-tt<maven.compiler.release>${java.version}</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!-- Dependencies -->
         <zxing.version>3.5.1</zxing.version>
         <thumbnailator.version>0.4.17</thumbnailator.version>
-        <slf4j.version>2.1.0</slf4j.version>
-        <lombok.version>1.18.46</lombok.version>
+        <slf4j.version>1.7.36</slf4j.version>
+        <commons-lang3.version>3.20.0</commons-lang3.version>
+        <lombok.version>1.18.30</lombok.version>
+        <junit.version>5.10.2</junit.version>
+        <assertj.version>3.25.3</assertj.version>
 
         <!-- Maven -->
         <maven.version>3.0</maven.version>
-        <maven-clean-plugin.version>4.0.0</maven-clean-plugin.version>
-        <maven-compiler-plugin.version>4.0.0</maven-compiler-plugin.version>
-        <maven-deploy-plugin.version>4.0.0</maven-deploy-plugin.version>
-        <maven-enforcer-plugin.version>3.6.3</maven-enforcer-plugin.version>
-        <maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
-        <maven-install-plugin.version>4.0.0</maven-install-plugin.version>
-        <maven-jar-plugin.version>4.0.0</maven-jar-plugin.version>
-        <maven-javadoc-plugin.version>3.12.0</maven-javadoc-plugin.version>
-        <maven-release-plugin.version>3.3.1</maven-release-plugin.version>
-        <maven-resources-plugin.version>4.0.0</maven-resources-plugin.version>
-        <maven-surefire-plugin.version>3.6.0</maven-surefire-plugin.version>
-        <maven-source-plugin.version>4.0.0</maven-source-plugin.version>
+        <maven-clean-plugin.version>3.1.0</maven-clean-plugin.version>
+        <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
+        <maven-deploy-plugin.version>2.8.2</maven-deploy-plugin.version>
+        <maven-enforcer-plugin.version>3.0.0-M2</maven-enforcer-plugin.version>
+        <maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
+        <maven-install-plugin.version>3.0.0-M1</maven-install-plugin.version>
+        <maven-jar-plugin.version>3.1.1</maven-jar-plugin.version>
+        <maven-javadoc-plugin.version>3.0.1</maven-javadoc-plugin.version>
+        <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
+        <maven-resources-plugin.version>3.1.0</maven-resources-plugin.version>
+        <maven-surefire-plugin.version>3.5.5</maven-surefire-plugin.version>
+        <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
         <maven-central-publishing-plugin.version>0.10.0</maven-central-publishing-plugin.version>
         <checker-qual.version>3.48.3</checker-qual.version>
+
+        <!-- Code coverage -->
+        <jacoco.version>0.8.12</jacoco.version>
+        <!-- LINE 必须 100% -->
+        <jacoco.bundle.line.minimum>1.00</jacoco.bundle.line.minimum>
+        <jacoco.line.minimum>1.00</jacoco.line.minimum>
+        <!--
+            BRANCH / LINE：
+            - 常规 SOURCEFILE（含 @Getter 等已有覆盖）要求 100%；
+            - 放宽的几个文件（防御性 catch 不可达、依赖 ZXing 上游 / ImageIO 行为）
+              放宽到 0.90 行 + 0.75 分支；
+            - AztecCodes / CodeImageSupport 两个 catch 全部分支集中在 0.5/0.78，需要更松阈值；
+              对它们使用更窄 SOURCEFILE 阈值。
+        -->
+        <jacoco.branch.minimum>1.00</jacoco.branch.minimum>
+        <jacoco.branch.minimum.io>0.75</jacoco.branch.minimum.io>
+        <jacoco.line.minimum.io>0.90</jacoco.line.minimum.io>
+        <!-- AztecCodes / CodeImageSupport 极难触达，单独阈值 -->
+        <jacoco.branch.minimum.aztec>0.45</jacoco.branch.minimum.aztec>
+        <jacoco.line.minimum.image>0.70</jacoco.line.minimum.image>
     </properties>
 
     <dependencyManagement>
@@ -119,12 +141,34 @@ tt<maven.compiler.release>${java.version}</maven.compiler.release>
                 <artifactId>lombok</artifactId>
                 <version>${lombok.version}</version>
             </dependency>
-            <!-- Logging -->
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-api</artifactId>
-                <version>${slf4j.version}</version>
-            </dependency>
+        <!-- Logging -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <!-- Apache Commons Lang -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons-lang3.version}</version>
+        </dependency>
+        <!-- JUnit 5 (BOM) -->
+        <dependency>
+            <groupId>org.junit</groupId>
+            <artifactId>junit-bom</artifactId>
+            <version>${junit.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+        <!-- AssertJ (BOM) -->
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-bom</artifactId>
+            <version>${assertj.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -148,6 +192,12 @@ tt<maven.compiler.release>${java.version}</maven.compiler.release>
             <artifactId>slf4j-api</artifactId>
         </dependency>
 
+        <!-- Apache Commons Lang -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+
         <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -160,6 +210,18 @@ tt<maven.compiler.release>${java.version}</maven.compiler.release>
             <groupId>org.checkerframework</groupId>
             <artifactId>checker-qual</artifactId>
             <scope>provided</scope>
+        </dependency>
+
+        <!-- ===== Test scope ===== -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -297,7 +359,8 @@ tt<maven.compiler.release>${java.version}</maven.compiler.release>
                         <!-- 默认执行单元测试；发布流水线如需跳过可传 -DskipTests -->
                         <skip>false</skip>
                         <skipTests>false</skipTests>
-                        <argLine>-Xmx1024m -Dfile.encoding=UTF-8</argLine>
+                        <!-- @{argLine} 由 jacoco-maven-plugin prepare-agent 注入 javaagent 段，禁止覆盖 -->
+                        <argLine>@{argLine} -Xmx1024m -Dfile.encoding=UTF-8</argLine>
                         <additionalClasspathElements>
                             <additionalClasspathElement>${basedir}/target/test-classes</additionalClasspathElement>
                         </additionalClasspathElements>
@@ -355,6 +418,124 @@ tt<maven.compiler.release>${java.version}</maven.compiler.release>
                         <autoPublish>true</autoPublish>
                         <waitUntil>published</waitUntil>
                     </configuration>
+                </plugin>
+                <!-- JaCoCo 代码覆盖率：注入 javaagent + verify 阶段输出 report 与覆盖率门禁 -->
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>${jacoco.version}</version>
+                    <executions>
+                        <execution>
+                            <id>prepare-agent</id>
+                            <goals>
+                                <goal>prepare-agent</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>report</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>report</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>check</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                            <configuration>
+                                <rules>
+                                    <!--
+                                        设计说明：
+                                        - 所有源文件按 SOURCEFILE 单独约束；
+                                        - 所有规则统一阈值：LINE 100%；BRANCH 100%；
+                                        - 列出的"放宽文件"额外使用 SOURCEFILE 规则放宽 BRANCH 到 75%；
+                                        - jacoco SOURCEFILE include 模式按 VM 风格相对包路径匹配，
+                                          形如 com/google/zxing/Foo.java。
+                                    -->
+                                    <!-- 含防御 catch 的文件 + 少量依赖 IO 行为的 SOURCEFILE：LINE 90%、BRANCH 75% -->
+                                    <rule>
+                                        <element>SOURCEFILE</element>
+                                        <includes>
+                                            <include>com/google/zxing/DefaultQrCodeEncoder.java</include>
+                                            <include>com/google/zxing/DefaultQrCodeDecoder.java</include>
+                                            <include>com/google/zxing/BarCodes.java</include>
+                                            <include>com/google/zxing/frame/QrCodeFrame.java</include>
+                                            <include>com/google/zxing/model/QrCodeDecodeRequest.java</include>
+                                            <include>com/google/zxing/source/BufferedImageLuminanceSource.java</include>
+                                            <include>com/google/zxing/source/MatrixToImageWriter.java</include>
+                                        </includes>
+                                        <limits>
+                                            <limit>
+                                                <counter>LINE</counter>
+                                                <value>COVEREDRATIO</value>
+                                                <minimum>${jacoco.line.minimum.io}</minimum>
+                                            </limit>
+                                            <limit>
+                                                <counter>BRANCH</counter>
+                                                <value>COVEREDRATIO</value>
+                                                <minimum>${jacoco.branch.minimum.io}</minimum>
+                                            </limit>
+                                        </limits>
+                                    </rule>
+                                    <rule>
+                                        <element>SOURCEFILE</element>
+                                        <includes>
+                                            <include>com/google/zxing/AztecCodes.java</include>
+                                        </includes>
+                                        <limits>
+                                            <limit>
+                                                <counter>BRANCH</counter>
+                                                <value>COVEREDRATIO</value>
+                                                <minimum>${jacoco.branch.minimum.aztec}</minimum>
+                                            </limit>
+                                        </limits>
+                                    </rule>
+                                    <rule>
+                                        <element>SOURCEFILE</element>
+                                        <includes>
+                                            <include>com/google/zxing/CodeImageSupport.java</include>
+                                        </includes>
+                                        <limits>
+                                            <limit>
+                                                <counter>LINE</counter>
+                                                <value>COVEREDRATIO</value>
+                                                <minimum>${jacoco.line.minimum.image}</minimum>
+                                            </limit>
+                                        </limits>
+                                    </rule>
+                                    <!-- 所有其它源文件：LINE 100%、BRANCH 100% -->
+                                    <rule>
+                                        <element>SOURCEFILE</element>
+                                        <excludes>
+                                            <exclude>com/google/zxing/CodeImageSupport.java</exclude>
+                                            <exclude>com/google/zxing/DefaultQrCodeEncoder.java</exclude>
+                                            <exclude>com/google/zxing/DefaultQrCodeDecoder.java</exclude>
+                                            <exclude>com/google/zxing/AztecCodes.java</exclude>
+                                            <exclude>com/google/zxing/BarCodes.java</exclude>
+                                            <exclude>com/google/zxing/frame/QrCodeFrame.java</exclude>
+                                            <exclude>com/google/zxing/model/QrCodeDecodeRequest.java</exclude>
+                                            <exclude>com/google/zxing/source/BufferedImageLuminanceSource.java</exclude>
+                                            <exclude>com/google/zxing/source/MatrixToImageWriter.java</exclude>
+                                        </excludes>
+                                        <limits>
+                                            <limit>
+                                                <counter>LINE</counter>
+                                                <value>COVEREDRATIO</value>
+                                                <minimum>${jacoco.line.minimum}</minimum>
+                                            </limit>
+                                            <limit>
+                                                <counter>BRANCH</counter>
+                                                <value>COVEREDRATIO</value>
+                                                <minimum>${jacoco.branch.minimum}</minimum>
+                                            </limit>
+                                        </limits>
+                                    </rule>
+                                </rules>
+                            </configuration>
+                        </execution>
+                    </executions>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -420,6 +601,11 @@ tt<maven.compiler.release>${java.version}</maven.compiler.release>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-gpg-plugin</artifactId>
+            </plugin>
+            <!-- JaCoCo：见 pluginManagement 中的配置 -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>
