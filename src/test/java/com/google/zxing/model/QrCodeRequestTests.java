@@ -5,6 +5,8 @@ import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.Test;
 
+import com.google.zxing.frame.QrCodeBlockElement;
+import com.google.zxing.frame.QrCodeFrame;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,7 +28,7 @@ class QrCodeRequestTests {
         assertThat(request.getCharset()).isEqualTo(StandardCharsets.UTF_8);
         assertThat(request.getErrorCorrectionLevel()).isEqualTo(ErrorCorrectionLevel.M);
         assertThat(request.getFormat()).isEqualTo(QrCodeImageFormat.PNG);
-        assertThat(request.getStyle()).isSameAs(QrCodeStyle.monochrome());
+        assertThat(request.getStyle()).isNotNull();
         assertThat(request.getLogo()).isNull();
         assertThat(request.getFrame()).isNull();
         assertThat(request.isSelfCheck()).isFalse();

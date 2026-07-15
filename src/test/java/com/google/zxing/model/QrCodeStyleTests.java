@@ -113,9 +113,9 @@ class QrCodeStyleTests {
 
     @Test
     void builderRejectsNullForegroundOrBackground() {
-        assertThatThrownBy(() -> QrCodeStyle.builder().foregroundColor(null))
+        assertThatThrownBy(() -> QrCodeStyle.builder().foregroundColor(null).build())
                 .isInstanceOf(NullPointerException.class);
-        assertThatThrownBy(() -> QrCodeStyle.builder().backgroundColor(null))
+        assertThatThrownBy(() -> QrCodeStyle.builder().backgroundColor(null).build())
                 .isInstanceOf(NullPointerException.class);
     }
 }

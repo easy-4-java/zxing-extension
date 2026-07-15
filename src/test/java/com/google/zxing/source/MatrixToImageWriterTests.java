@@ -10,16 +10,21 @@
 package com.google.zxing.source;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.EnumMap;
 import java.util.Map;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
@@ -58,6 +63,17 @@ class MatrixToImageWriterTests {
 	}
 
 	@Test
+	@DisplayName("toBufferedImage(BitMatrix, int) 缩放至指定 size")
+	void toBufferedImage_withSize() throws Exception {
+		BitMatrix matrix = createMatrix();
+
+		BufferedImage img = MatrixToImageWriter.toBufferedImage(matrix, 200);
+
+		assertThat(img.getWidth()).isEqualTo(200);
+		assertThat(img.getHeight()).isEqualTo(200);
+	}
+
+	@Test
 	@DisplayName("updateBit 在有效区外扩 margin 后尺寸大于原有效区")
 	void updateBit_expandsByMargin() throws Exception {
 		BitMatrix matrix = createMatrix();
@@ -70,6 +86,18 @@ class MatrixToImageWriterTests {
 	}
 
 	@Test
+	@DisplayName("updateBit margin=0 仍按原有效矩形重建")
+	void updateBit_zeroMarginRebuildsFromRectangle() throws Exception {
+		BitMatrix matrix = createMatrix();
+		int[] rect = matrix.getEnclosingRectangle();
+
+		BitMatrix expanded = MatrixToImageWriter.updateBit(matrix, 0);
+
+		assertThat(expanded.getWidth()).isEqualTo(rect[2]);
+		assertThat(expanded.getHeight()).isEqualTo(rect[3]);
+	}
+
+	@Test
 	@DisplayName("zoomInImage 把 BufferedImage 缩放到指定宽高")
 	void zoomInImage_resizesCorrectly() {
 		BufferedImage src = new BufferedImage(50, 50, BufferedImage.TYPE_INT_RGB);
@@ -78,6 +106,14 @@ class MatrixToImageWriterTests {
 
 		assertThat(out.getWidth()).isEqualTo(200);
 		assertThat(out.getHeight()).isEqualTo(100);
+	}
+
+	@Test
+	@DisplayName("zoomInImage 使用零类型 BufferedImage 也能生成")
+	void zoomInImage_handlesZeroType() {
+		BufferedImage src = new BufferedImage(20, 20, BufferedImage.TYPE_INT_RGB);
+		BufferedImage out = MatrixToImageWriter.zoomInImage(src, 40, 40);
+		assertThat(out.getWidth()).isEqualTo(40);
 	}
 
 	@Test
@@ -97,6 +133,26 @@ class MatrixToImageWriterTests {
 	}
 
 	@Test
+	@DisplayName("writeToStream 写入已关闭流抛 IOException")
+	void writeToStream_closedStreamThrows() throws Exception {
+		BitMatrix matrix = createMatrix();
+		OutputStream closed = new OutputStream() {
+			@Override
+			public void write(int b) throws IOException {
+				throw new IOException("closed");
+			}
+
+			@Override
+			public void write(byte[] b, int off, int len) throws IOException {
+				throw new IOException("closed");
+			}
+		};
+
+		assertThatThrownBy(() -> MatrixToImageWriter.writeToStream(matrix, "png", closed))
+				.isInstanceOf(IOException.class);
+	}
+
+	@Test
 	@DisplayName("writeToFile 写出文件且非空")
 	void writeToFile_writesNonEmptyFile() throws Exception {
 		BitMatrix matrix = createMatrix();
@@ -109,6 +165,19 @@ class MatrixToImageWriterTests {
 		} finally {
 			tmp.delete();
 		}
+	}
+
+	@Test
+	@DisplayName("writeToFile 写入路径中含普通文件的父目录")
+	void writeToFile_writesIntoExistingDirectory(@TempDir Path tempDir) throws Exception {
+		BitMatrix matrix = createMatrix();
+		File nested = tempDir.resolve("a/b.png").toFile();
+		assertThat(nested.getParentFile().mkdirs()).isTrue();
+
+		MatrixToImageWriter.writeToFile(matrix, "png", nested);
+
+		assertThat(nested).exists();
+		assertThat(nested.length()).isPositive();
 	}
 
 	private static BitMatrix createMatrix() throws Exception {

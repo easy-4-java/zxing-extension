@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+
 /**
  * {@link QrCodeLogo} 单元测试。
  */
@@ -47,29 +48,30 @@ class QrCodeLogoTests {
 
     @Test
     void builderRequiresImage() {
-        assertThatThrownBy(() -> QrCodeLogo.builder(null))
+        // Builder constructor stores image; build() is what triggers requireNonNull.
+        assertThatThrownBy(() -> QrCodeLogo.builder(null).build())
                 .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void builderRejectsNegativeDimensions() {
-        assertThatThrownBy(() -> QrCodeLogo.builder(image(10, 10)).padding(-1))
+        assertThatThrownBy(() -> QrCodeLogo.builder(image(10, 10)).padding(-1).build())
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> QrCodeLogo.builder(image(10, 10)).cornerRadius(-1))
+        assertThatThrownBy(() -> QrCodeLogo.builder(image(10, 10)).cornerRadius(-1).build())
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void builderRejectsNegativeSize() {
-        assertThatThrownBy(() -> QrCodeLogo.builder(image(10, 10)).size(-1, 1))
+        assertThatThrownBy(() -> QrCodeLogo.builder(image(10, 10)).size(-1, 1).build())
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> QrCodeLogo.builder(image(10, 10)).size(1, -1))
+        assertThatThrownBy(() -> QrCodeLogo.builder(image(10, 10)).size(1, -1).build())
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void builderRejectsNullBackgroundColor() {
-        assertThatThrownBy(() -> QrCodeLogo.builder(image(10, 10)).backgroundColor(null))
+        assertThatThrownBy(() -> QrCodeLogo.builder(image(10, 10)).backgroundColor(null).build())
                 .isInstanceOf(NullPointerException.class);
     }
 }

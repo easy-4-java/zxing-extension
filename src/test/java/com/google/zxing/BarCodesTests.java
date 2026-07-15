@@ -1,6 +1,8 @@
 package com.google.zxing;
 
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -59,5 +61,72 @@ class BarCodesTests {
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> BarCodes.decode(new byte[] { 1, 2, 3 }))
                 .isInstanceOf(CodeException.class);
+    }
+
+    @Test
+    void decodeOnBlankImageThrows() {
+        java.awt.image.BufferedImage blank =
+                new java.awt.image.BufferedImage(80, 80, java.awt.image.BufferedImage.TYPE_INT_RGB);
+        java.awt.Graphics2D g = blank.createGraphics();
+        g.setColor(java.awt.Color.WHITE);
+        g.fillRect(0, 0, 80, 80);
+        g.dispose();
+        assertThatThrownBy(() -> BarCodes.decode(blank))
+                .isInstanceOf(CodeException.class);
+    }
+
+    @Test
+    void rejectsUnsupportedFormatsPdf417AztecDataMatrix() {
+        for (BarcodeFormat format : new BarcodeFormat[] {
+                BarcodeFormat.PDF_417, BarcodeFormat.AZTEC, BarcodeFormat.DATA_MATRIX, BarcodeFormat.MAXICODE
+        }) {
+            assertThatThrownBy(() -> BarCodes.encode(BarCodeRequest.builder("data", format).build()))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
+    @Test
+    void rejectsNullRequest() {
+        assertThatThrownBy(() -> BarCodes.encode(null))
+                .isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> BarCodes.decode((BufferedImage) null))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void rejectsUnreadableBytes() {
+        assertThatThrownBy(() -> BarCodes.decode(new byte[] { 7, 7, 7 }))
+                .isInstanceOf(CodeException.class);
+    }
+
+    @Test
+    void encodeAndDecodeAcrossAllSupportedFormats() {
+        for (BarcodeFormat format : new BarcodeFormat[] {
+                BarcodeFormat.CODABAR, BarcodeFormat.CODE_39, BarcodeFormat.CODE_93,
+                BarcodeFormat.CODE_128, BarcodeFormat.EAN_8, BarcodeFormat.EAN_13,
+                BarcodeFormat.ITF, BarcodeFormat.UPC_A
+        }) {
+            String content = pickContent(format);
+            CodeOutput output = BarCodes.encode(BarCodeRequest.builder(content, format)
+                    .size(220, 100).margin(4).build());
+            assertThat(BarCodes.decode(output.getBytes()).getBarcodeFormat()).isEqualTo(format);
+            assertThat(BarCodes.decode(output.getBytes())).isNotNull();
+        }
+    }
+
+    private static String pickContent(BarcodeFormat format) {
+        if (format == BarcodeFormat.EAN_13) {
+            return "590123412345";
+        }
+        if (format == BarcodeFormat.EAN_8) {
+            return "96385074";
+        }
+        if (format == BarcodeFormat.UPC_A) {
+            return "42510075714";
+        }
+        if (format == BarcodeFormat.ITF) {
+            return "12345678901231";
+        }
+        return "1234567890";
     }
 }

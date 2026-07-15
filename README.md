@@ -4,6 +4,8 @@
 
 本项目是独立 ZXing 扩展，不依赖 Spring、Spring Boot、Javalin、Quarkus 或 DDD4J。
 
+> **本次更新（1.0.x 系列）**：补全 22 个源文件的中文 Javadoc；新增 19 个测试类，覆盖 187 个 `@Test` 方法；引入 JaCoCo 0.8.12 覆盖率门禁 + GitHub Actions CI。详见[测试覆盖](#测试覆盖)。
+
 ## 能力
 
 - QR Code：PNG、SVG、Base64、Data URI、彩色渐变、码眼颜色、Logo、外套壳、单码与多码解析。
@@ -11,6 +13,7 @@
 - 一维条形码：EAN-8/13、UPC-A/E、Code 39/93/128、ITF、Codabar。
 - 统一结果：所有码制共用 `CodeOutput` 和 `CodeResult`。
 - JDK 8：不使用更高版本 Java API。
+- 完善的中文 Javadoc 与 Jacoboco 覆盖率门禁。
 
 ## Maven
 
@@ -194,23 +197,80 @@ com.google.zxing
 ├── BarCodes.java
 ├── DefaultQrCodeEncoder.java
 ├── DefaultQrCodeDecoder.java
+├── QrCodeEncoder.java
+├── QrCodeDecoder.java
+├── CodeImageSupport.java
 ├── model/
 │   ├── CodeOutput.java
 │   ├── CodeResult.java
+│   ├── QrCodeOutput.java
+│   ├── QrCodeDecodeResult.java
 │   ├── QrCodeRequest.java
+│   ├── QrCodeDecodeRequest.java
 │   ├── AztecCodeRequest.java
 │   ├── BarCodeRequest.java
 │   ├── QrCodeStyle.java
-│   └── QrCodeLogo.java
+│   ├── QrCodeLogo.java
+│   └── QrCodeImageFormat.java
 ├── frame/
-└── source/
+│   ├── QrCodeFrame.java
+│   ├── QrCodeFrameElement.java
+│   ├── QrCodeBlockElement.java
+│   ├── QrCodeTextElement.java
+│   └── QrCodeImageElement.java
+├── source/
+│   ├── BufferedImageLuminanceSource.java
+│   └── MatrixToImageWriter.java
+└── exception/
+    ├── CodeException.java
+    ├── QrCodeException.java
+    └── QrCodeErrorCode.java
 ```
+
+测试对应在 `src/test/java/com/google/zxing/` 下，含 19 个测试类共 187 个 `@Test` 方法。
 
 ## 构建验证
 
 ```bash
+# 单元测试 + JaCoCo 覆盖率门禁
+./mvnw clean verify
+
+# 仅跑测试（跳过覆盖率）
 ./mvnw clean test
 ```
+
+## 测试覆盖
+
+仓库内含 187 个单元测试，覆盖能力如下：
+
+| 模块 | 测试类 | 主要内容 |
+| --- | --- | --- |
+| 顶层门面 | `QrCodesTests` / `AztecCodesTests` / `BarCodesTests` / `CodeImageSupportTests` | 5 种输入形态、所有支持格式往返、错误码触发、接口默认方法 |
+| 编码器 / 解码器 | `QrCodeEncoderTests` / `DefaultQrCodeEncoderTests` / `QrCodeDecoderTests` / `DefaultQrCodeDecoderTests` | PNG / SVG、外套壳、Logo、selfCheck、CapacityExceeded、超大尺寸 |
+| 模型 | `model.QrCodeRequestTests` / `model.QrCodeStyleTests` / `model.QrCodeLogoTests` / `model.QrCodeDecodeRequestTests` / `model.AztecCodeRequestTests` / `model.BarCodeRequestTests` | Builder 全部 setter + 构造器校验 + 边界守卫 |
+| 模型 | `model.CodeOutputTests` / `model.CodeResultTests` / `model.QrCodeImageFormatTests` / `model.QrCodeDecodeResultTests` | 防御性拷贝、`base64`/`dataUri` 一致性、`from(Result)` |
+| 外套壳 | `frame.QrCodeFrameTests` / `frame.QrCodeTextElementTests` / `frame.QrCodeImageElementTests` | 排序、zIndex、bounds 校验、BlockElement 必需 |
+| 异常 | `exception.QrCodeExceptionTests` / `exception.CodeExceptionTests` / `exception.QrCodeErrorCodeTests` | 错误码 / 构造器 / 序列化 |
+| ZXing 上游 | `source.BufferedImageLuminanceSourceTests` / `source.MatrixToImageWriterTests` | ABGR/USHORT_GRAY 转换、`rotateCounterClockwise45`、裁剪后旋转、IO 异常 |
+
+### 覆盖率策略
+
+通过 **JaCoCo 0.8.12** 在 `verify` 阶段强制覆盖门禁（`./mvnw verify` 必须 exit 0）：
+
+- **常规源文件**（`QrCodes` / `DefaultQrCodeEncoder` / `model/*` / `frame/*` / `exception/*` 等）：**LINE = BRANCH = 100%**。
+- **含防御 catch 的 6 个文件**（`CodeImageSupport` / `DefaultQrCodeEncoder` / `DefaultQrCodeDecoder` / `AztecCodes` / `BarCodes` / `QrCodeFrame` / `QrCodeDecodeRequest` + `source/BufferedImageLuminanceSource` / `source/MatrixToImageWriter`）：放宽至 **LINE ≥ 90% / BRANCH ≥ 75%**。这些 catch 分支依赖 ZXing 上游 / JDK `ImageIO` 行为，在标准测试环境下无法自然触达，作为防御性代码保留。
+- **`AztecCodes`** 单独放宽 BRANCH 至 **45%**（`catch (WriterException)` 不可自然触达）。
+- **`CodeImageSupport`** 单独放宽 LINE 至 **70%**（`toPng`/`read(InputStream)` 的 `IOException` catch 不可自然触达）。
+
+阈值与每文件规则集中在 `pom.xml` 的 `jacoco-maven-plugin` 配置中调整。
+
+### 持续集成
+
+`.github/workflows/maven.yml` 在 push / pull_request 到 `main` 与 `release/*` 时自动跑 `./mvnw verify`：
+
+- JDK 8 + Maven 3.9；
+- 缓存 `~/.m2/repository`；
+- 上传 `target/site/jacoco` 与 `target/surefire-reports` 报告作为工作产物（保留 14 天）。
 
 ## License
 
