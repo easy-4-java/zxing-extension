@@ -1,194 +1,111 @@
+[English](./README.md) | [简体中文](./README.zh-CN.md)
+
 # zxing-extension
 
-基于 ZXing Core 3.5.4 的纯 Java 扩展库，提供 QR Code、Aztec 和一维条形码的生成与解析。
+![Java](https://img.shields.io/badge/Java-8-blue)
+![License](https://img.shields.io/badge/License-Apache%202.0-blue)
 
-本项目是独立 ZXing 扩展，不依赖 Spring、Spring Boot、Javalin、Quarkus 或 DDD4J。
+**ZXing Extensions — QR Code and Bar Code utilities** — a pure-Java extension library built on ZXing Core 3.5.4 for generating and decoding QR Codes, Aztec codes and 1D barcodes, with typed request models and unified output/result objects.
 
-> **本次更新（1.0.x 系列）**：补全 22 个源文件的中文 Javadoc；新增 19 个测试类，覆盖 187 个 `@Test` 方法；引入 JaCoCo 0.8.12 覆盖率门禁 + GitHub Actions CI。详见[测试覆盖](#测试覆盖)。
+**Navigation**
 
-## 能力
+- [1. Project Overview](#1-project-overview)
+- [2. Features & Status](#2-features--status)
+- [3. Requirements & Compatibility](#3-requirements--compatibility)
+- [4. Architecture & Modules](#4-architecture--modules)
+- [5. Installation](#5-installation)
+- [6. Quick Start](#6-quick-start)
+- [7. Configuration](#7-configuration)
+- [8. Core Usage / API](#8-core-usage--api)
+- [9. Testing & Build](#9-testing--build)
+- [10. Versioning & Branches](#10-versioning--branches)
+- [11. Contributing & License](#11-contributing--license)
 
-- QR Code：PNG、SVG、Base64、Data URI、彩色渐变、码眼颜色、Logo、外套壳、单码与多码解析。
-- Aztec：尺寸、纠错百分比、quiet zone、PNG、Base64、常见输入解析。
-- 一维条形码：EAN-8/13、UPC-A/E、Code 39/93/128、ITF、Codabar。
-- 统一结果：所有码制共用 `CodeOutput` 和 `CodeResult`。
-- JDK 8：不使用更高版本 Java API。
-- 完善的中文 Javadoc 与 Jacoboco 覆盖率门禁。
+## 1. Project Overview
 
-## Maven
+`zxing-extension` is a **standalone ZXing extension** — it does not depend on Spring, Spring Boot, Javalin, Quarkus or DDD4J. It offers three facades with a consistent usage pattern:
 
-```xml
-<dependency>
-    <groupId>io.github.hiwepy</groupId>
-    <artifactId>zxing-extension</artifactId>
-    <version>1.0.x.20260630-SNAPSHOT</version>
-</dependency>
+- `QrCodes` — QR Code generation (PNG, SVG, Base64, Data URI, gradients, eye colors, Logo, outer frames) and decoding (single and multiple codes).
+- `AztecCodes` — Aztec code generation (size, error-correction percent, quiet zone) and decoding.
+- `BarCodes` — 1D barcodes (EAN-8/13, UPC-A/E, Code 39/93/128, ITF, Codabar) and decoding.
+
+**What it is not**
+
+- Not a wrapper around weak-typed ZXing `hints` maps — the public API is typed (`QrCodeRequest`, `QrCodeStyle`, `CodeOutput`, ...).
+- Not an image post-processor — it returns PNG bytes / SVG text / `BufferedImage` and lets the caller decide what to do with them.
+- Not a network fetcher — the core never downloads remote URLs (no SSRF surface).
+
+**Typical scenarios**
+
+| Scenario | How this component helps |
+|:---|:---|
+| Generate QR codes for URLs / payment payloads | `QrCodes.encode(...)` / `QrCodes.encoder()` with `QrCodeRequest` |
+| Branded QR (colors, logo, outer frame) | `QrCodeStyle`, `QrCodeLogo`, `QrCodeFrame` |
+| Print-ready vector output | SVG output via `QrCodeImageFormat.SVG` |
+| Decode codes from images / streams / files | `decode(byte[] | BufferedImage | File | Path | InputStream)` |
+| Scan multiple codes from one image | `QrCodeDecodeRequest.multiple(true)` |
+| Warehouse / retail barcodes | `BarCodes.ean13(...)` or `BarCodeRequest` with `BarcodeFormat` |
+
+## 2. Features & Status
+
+| Capability | Status | Description |
+|:---|:---|:---|
+| QR Code generation | Stable | PNG, SVG, Base64, Data URI; colorful gradients, eye color, Logo, outer frames, `selfCheck`, size / margin / charset / error-correction level |
+| QR Code decoding | Stable | Single and multiple codes; inputs: `byte[]`, `BufferedImage`, `File`, `Path`, `InputStream` |
+| Aztec codes | Stable | Size, error-correction percent, quiet zone; PNG / Base64 output; common-input decoding |
+| 1D barcodes | Stable | EAN-8/13, UPC-A/E, Code 39/93/128, ITF, Codabar |
+| Unified output / result | Stable | All code types share `CodeOutput` (bytes, image, base64, dataUri, writeTo) and `CodeResult` (text, format, raw bytes, points, metadata) |
+| Typed request models | Stable | `QrCodeRequest`, `QrCodeDecodeRequest`, `AztecCodeRequest`, `BarCodeRequest`, `QrCodeStyle`, `QrCodeLogo`, `QrCodeImageFormat` |
+| Outer frame composition | Stable | `QrCodeFrame` combines QR + text + image elements with z-ordering |
+| JDK 8 compatible | Stable | No APIs above Java 8; no remote URL downloads |
+| Chinese Javadoc | Stable | All 29 source files carry Chinese Javadoc |
+| Test & coverage gate | Stable | 25 test classes / 188 `@Test` methods; JaCoCo coverage rules in the POM + GitHub Actions CI |
+
+## 3. Requirements & Compatibility
+
+| Requirement | Version |
+|:---|:---|
+| JDK | 8+ (baseline of the `feature/1.0.x` branch) |
+| Maven | 3.0+ |
+| ZXing | `com.google.zxing:core` 3.5.4 |
+| Others | `commons-lang3` 3.20.0, `slf4j-api` 2.0.18, `checker-qual` (provided) |
+
+**Version line matrix**
+
+| Branch | JDK | Version pattern |
+|:---|:---|:---|
+| `feature/1.0.x` | 8 | `1.0.x.*` |
+| `feature/2.0.x` | 17 | `2.0.x.*` |
+| `feature/3.0.x` | 21 | `3.0.x.*` |
+
+This document describes the `feature/1.0.x` line (current version: `1.0.x.20260630-SNAPSHOT`).
+
+## 4. Architecture & Modules
+
+```text
+      Caller
+        |
+   +----+----------------+----------------+
+   |    |                |                |
+ QrCodes             AztecCodes       BarCodes
+   |                    |                |
+   +--------+-----------+--------+-------+
+            |                    |
+  DefaultQrCodeEncoder     ZXing MultiFormatWriter
+  DefaultQrCodeDecoder     ZXing MultiFormatReader
+            |
+   CodeOutput / CodeResult
+            |
+   PNG bytes | SVG text | BufferedImage
 ```
 
-## 快速开始
+**Module list**
 
-### QR Code
+| Module | Type | Responsibility |
+|:---|:---|:---|
+| `zxing-extension` | Single jar (library) | Facades, encoders/decoders, models, frame composition, image support |
 
-```java
-// 普通二维码
-QrCodeOutput normal = QrCodes.encode("https://github.com/hiwepy");
-
-// 彩色二维码
-QrCodeOutput colorful = QrCodes.colorful("https://github.com/hiwepy");
-
-// 带 Logo
-BufferedImage logo = ImageIO.read(new File("logo.png"));
-QrCodeOutput withLogo = QrCodes.withLogo("https://github.com/hiwepy", logo);
-
-// 字节、Base64 和 Data URI
-byte[] png = colorful.getBytes();
-String base64 = colorful.base64();
-String dataUri = colorful.dataUri();
-
-// 解析
-QrCodeDecodeResult result = QrCodes.decode(png);
-String content = result.getText();
-```
-
-高级生成使用 `QrCodeRequest`：
-
-```java
-QrCodeOutput output = QrCodes.encoder().encode(
-    QrCodeRequest.builder("hello")
-        .size(430, 430)
-        .margin(2)
-        .errorCorrectionLevel(ErrorCorrectionLevel.H)
-        .style(QrCodeStyle.builder()
-            .foregroundColor(new Color(0, 122, 98))
-            .gradientEndColor(new Color(69, 54, 143))
-            .eyeColor(new Color(24, 45, 110))
-            .build())
-        .logo(QrCodeLogo.builder(logo).size(56, 28).build())
-        .selfCheck(true)
-        .build());
-```
-
-输出 SVG：
-
-```java
-QrCodeOutput svg = QrCodes.encoder().encode(
-    QrCodeRequest.builder("hello")
-        .format(QrCodeImageFormat.SVG)
-        .build());
-```
-
-外套壳使用 `QrCodeFrame` 组合二维码、文字和图片元素：
-
-```java
-QrCodeFrame frame = QrCodeFrame.builder(420, 520)
-    .addElement(QrCodeTextElement.builder("扫码查看详情")
-        .bounds(100, 30, 260, 40)
-        .font("SansSerif", 28, true)
-        .build())
-    .addElement(QrCodeBlockElement.builder()
-        .x(50).y(100).width(320).height(320).zIndex(1)
-        .build())
-    .build();
-```
-
-多码解析：
-
-```java
-List<QrCodeDecodeResult> results = QrCodes.decoder().decode(
-    QrCodeDecodeRequest.from(image)
-        .multiple(true)
-        .build());
-```
-
-### Aztec
-
-```java
-// 快捷生成与解析
-CodeOutput output = AztecCodes.encode("hello-aztec");
-CodeResult result = AztecCodes.decode(output.getBytes());
-
-// 自定义尺寸、纠错百分比和 quiet zone
-CodeOutput custom = AztecCodes.encode(
-    AztecCodeRequest.builder("hello-aztec")
-        .size(320, 280)
-        .errorCorrectionPercent(40)
-        .margin(4)
-        .build());
-```
-
-### 一维条形码
-
-```java
-// EAN-13 快捷入口
-CodeOutput ean13 = BarCodes.ean13("6901234567892");
-CodeResult result = BarCodes.decode(ean13.getBytes());
-
-// 其他一维码制
-CodeOutput code128 = BarCodes.encode(
-    BarCodeRequest.builder("ORDER-20260715", BarcodeFormat.CODE_128)
-        .size(360, 120)
-        .margin(8)
-        .build());
-```
-
-## 输入与输出
-
-三个门面保持一致的使用模式：
-
-| 门面 | 快捷生成 | 高级生成 | 解析输入 |
-|---|---|---|---|
-| `QrCodes` | `encode`、`colorful`、`withLogo` | `QrCodeRequest` | `byte[]`、`BufferedImage`、`File`、`Path`、`InputStream` |
-| `AztecCodes` | `encode` | `AztecCodeRequest` | 同上 |
-| `BarCodes` | `ean13` | `BarCodeRequest` | 同上 |
-
-`CodeOutput` 提供：
-
-- `getBytes()`
-- `image()`
-- `base64()`
-- `dataUri()`
-- `writeTo(OutputStream)`
-- `getWidth()` / `getHeight()` / `getMimeType()`
-
-调用方传入的 `InputStream` 和 `OutputStream` 均不会被库关闭。
-
-## 架构
-
-```mermaid
-flowchart TB
-    User[调用方]
-    QR[QrCodes]
-    AZ[AztecCodes]
-    BAR[BarCodes]
-    QRE[DefaultQrCodeEncoder]
-    QRD[DefaultQrCodeDecoder]
-    MFW[ZXing MultiFormatWriter]
-    MFR[ZXing MultiFormatReader]
-    OUT[CodeOutput]
-    RESULT[CodeResult]
-
-    User --> QR & AZ & BAR
-    QR --> QRE & QRD
-    QRE --> MFW
-    QRD --> MFR
-    AZ --> MFW & MFR
-    BAR --> MFW & MFR
-    QRE --> OUT
-    AZ --> OUT
-    BAR --> OUT
-    QRD --> RESULT
-    AZ --> RESULT
-    BAR --> RESULT
-```
-
-设计约束：
-
-- QR 的 L/M/Q/H 与 Aztec 的纠错百分比不是同一语义，因此分别建模。
-- 一维码制没有 Logo、渐变和外套壳，不暴露无效参数。
-- 三种码制共享真正相同的输出与解析结果，不使用弱类型 hints 作为公共 API。
-- 核心模块不下载远程 URL，避免引入 SSRF 风险。
-
-## 主要结构
+**Package layout** (`com.google.zxing`)
 
 ```text
 com.google.zxing
@@ -227,51 +144,212 @@ com.google.zxing
     └── QrCodeErrorCode.java
 ```
 
-测试对应在 `src/test/java/com/google/zxing/` 下，含 19 个测试类共 187 个 `@Test` 方法。
+## 5. Installation
 
-## 构建验证
+> **Assumption**: artifacts are currently distributed through the project's private Maven repository (Aliyun) and GitHub Releases; the library is **not yet published to Maven Central**. If the coordinates below cannot be resolved, either add the private repository to your build or install locally with `./mvnw install`.
 
-```bash
-# 单元测试 + JaCoCo 覆盖率门禁
-./mvnw clean verify
+**Maven**
 
-# 仅跑测试（跳过覆盖率）
-./mvnw clean test
+```xml
+<dependency>
+    <groupId>io.github.easy4j</groupId>
+    <artifactId>zxing-extension</artifactId>
+    <version>1.0.x.20260630-SNAPSHOT</version>
+</dependency>
 ```
 
-## 测试覆盖
+**Gradle**
 
-仓库内含 187 个单元测试，覆盖能力如下：
+```gradle
+implementation 'io.github.easy4j:zxing-extension:1.0.x.20260630-SNAPSHOT'
+```
 
-| 模块 | 测试类 | 主要内容 |
-| --- | --- | --- |
-| 顶层门面 | `QrCodesTests` / `AztecCodesTests` / `BarCodesTests` / `CodeImageSupportTests` | 5 种输入形态、所有支持格式往返、错误码触发、接口默认方法 |
-| 编码器 / 解码器 | `QrCodeEncoderTests` / `DefaultQrCodeEncoderTests` / `QrCodeDecoderTests` / `DefaultQrCodeDecoderTests` | PNG / SVG、外套壳、Logo、selfCheck、CapacityExceeded、超大尺寸 |
-| 模型 | `model.QrCodeRequestTests` / `model.QrCodeStyleTests` / `model.QrCodeLogoTests` / `model.QrCodeDecodeRequestTests` / `model.AztecCodeRequestTests` / `model.BarCodeRequestTests` | Builder 全部 setter + 构造器校验 + 边界守卫 |
-| 模型 | `model.CodeOutputTests` / `model.CodeResultTests` / `model.QrCodeImageFormatTests` / `model.QrCodeDecodeResultTests` | 防御性拷贝、`base64`/`dataUri` 一致性、`from(Result)` |
-| 外套壳 | `frame.QrCodeFrameTests` / `frame.QrCodeTextElementTests` / `frame.QrCodeImageElementTests` | 排序、zIndex、bounds 校验、BlockElement 必需 |
-| 异常 | `exception.QrCodeExceptionTests` / `exception.CodeExceptionTests` / `exception.QrCodeErrorCodeTests` | 错误码 / 构造器 / 序列化 |
-| ZXing 上游 | `source.BufferedImageLuminanceSourceTests` / `source.MatrixToImageWriterTests` | ABGR/USHORT_GRAY 转换、`rotateCounterClockwise45`、裁剪后旋转、IO 异常 |
+## 6. Quick Start
 
-### 覆盖率策略
+**QR Code**
 
-通过 **JaCoCo 0.8.12** 在 `verify` 阶段强制覆盖门禁（`./mvnw verify` 必须 exit 0）：
+```java
+// Plain QR
+QrCodeOutput normal = QrCodes.encode("https://github.com/hiwepy");
 
-- **常规源文件**（`QrCodes` / `DefaultQrCodeEncoder` / `model/*` / `frame/*` / `exception/*` 等）：**LINE = BRANCH = 100%**。
-- **含防御 catch 的 6 个文件**（`CodeImageSupport` / `DefaultQrCodeEncoder` / `DefaultQrCodeDecoder` / `AztecCodes` / `BarCodes` / `QrCodeFrame` / `QrCodeDecodeRequest` + `source/BufferedImageLuminanceSource` / `source/MatrixToImageWriter`）：放宽至 **LINE ≥ 90% / BRANCH ≥ 75%**。这些 catch 分支依赖 ZXing 上游 / JDK `ImageIO` 行为，在标准测试环境下无法自然触达，作为防御性代码保留。
-- **`AztecCodes`** 单独放宽 BRANCH 至 **45%**（`catch (WriterException)` 不可自然触达）。
-- **`CodeImageSupport`** 单独放宽 LINE 至 **70%**（`toPng`/`read(InputStream)` 的 `IOException` catch 不可自然触达）。
+// Colorful QR
+QrCodeOutput colorful = QrCodes.colorful("https://github.com/hiwepy");
 
-阈值与每文件规则集中在 `pom.xml` 的 `jacoco-maven-plugin` 配置中调整。
+// With Logo
+BufferedImage logo = ImageIO.read(new File("logo.png"));
+QrCodeOutput withLogo = QrCodes.withLogo("https://github.com/hiwepy", logo);
 
-### 持续集成
+// Bytes, Base64 and Data URI
+byte[] png = colorful.getBytes();
+String base64 = colorful.base64();
+String dataUri = colorful.dataUri();
 
-`.github/workflows/maven.yml` 在 push / pull_request 到 `main` 与 `release/*` 时自动跑 `./mvnw verify`：
+// Decode
+QrCodeDecodeResult result = QrCodes.decode(png);
+String content = result.getText();
+```
 
-- JDK 8 + Maven 3.9；
-- 缓存 `~/.m2/repository`；
-- 上传 `target/site/jacoco` 与 `target/surefire-reports` 报告作为工作产物（保留 14 天）。
+Advanced generation with `QrCodeRequest`:
 
-## License
+```java
+QrCodeOutput output = QrCodes.encoder().encode(
+    QrCodeRequest.builder("hello")
+        .size(430, 430)
+        .margin(2)
+        .errorCorrectionLevel(ErrorCorrectionLevel.H)
+        .style(QrCodeStyle.builder()
+            .foregroundColor(new Color(0, 122, 98))
+            .gradientEndColor(new Color(69, 54, 143))
+            .eyeColor(new Color(24, 45, 110))
+            .build())
+        .logo(QrCodeLogo.builder(logo).size(56, 28).build())
+        .selfCheck(true)
+        .build());
+```
 
-Apache License 2.0。
+SVG output:
+
+```java
+QrCodeOutput svg = QrCodes.encoder().encode(
+    QrCodeRequest.builder("hello")
+        .format(QrCodeImageFormat.SVG)
+        .build());
+```
+
+Outer frame with `QrCodeFrame` — combine QR, text and image elements:
+
+```java
+QrCodeFrame frame = QrCodeFrame.builder(420, 520)
+    .addElement(QrCodeTextElement.builder("扫码查看详情")
+        .bounds(100, 30, 260, 40)
+        .font("SansSerif", 28, true)
+        .build())
+    .addElement(QrCodeBlockElement.builder()
+        .x(50).y(100).width(320).height(320).zIndex(1)
+        .build())
+    .build();
+```
+
+Multiple-code decoding:
+
+```java
+List<QrCodeDecodeResult> results = QrCodes.decoder().decode(
+    QrCodeDecodeRequest.from(image)
+        .multiple(true)
+        .build());
+```
+
+**Aztec**
+
+```java
+// Convenience encode & decode
+CodeOutput output = AztecCodes.encode("hello-aztec");
+CodeResult result = AztecCodes.decode(output.getBytes());
+
+// Custom size, error-correction percent and quiet zone
+CodeOutput custom = AztecCodes.encode(
+    AztecCodeRequest.builder("hello-aztec")
+        .size(320, 280)
+        .errorCorrectionPercent(40)
+        .margin(4)
+        .build());
+```
+
+**1D barcodes**
+
+```java
+// EAN-13 convenience
+CodeOutput ean13 = BarCodes.ean13("6901234567892");
+CodeResult result = BarCodes.decode(ean13.getBytes());
+
+// Other 1D formats
+CodeOutput code128 = BarCodes.encode(
+    BarCodeRequest.builder("ORDER-20260715", BarcodeFormat.CODE_128)
+        .size(360, 120)
+        .margin(8)
+        .build());
+```
+
+**Expected results**: `encode(...)` returns a `CodeOutput` whose `getBytes()` / `image()` / `base64()` / `dataUri()` hold the rendered code; `decode(...)` returns a `CodeResult` with `getText()` / `getFormat()` / `getRawBytes()` / `getPoints()` / `getMetadata()`. Invalid input or oversized payloads raise `CodeException` subtypes (e.g. `QrCodeException` with `QrCodeErrorCode`).
+
+## 7. Configuration
+
+This is a **pure library with no configuration file and no property prefix**. All behavior is configured through the typed request builders:
+
+| Request | Key options |
+|:---|:---|
+| `QrCodeRequest.builder(content)` | `size`, `margin`, `charset`, `errorCorrectionLevel`, `format`, `style`, `logo`, `frame`, `selfCheck` |
+| `QrCodeDecodeRequest.from(...)` | `multiple`, `tryHarder`, `pureBarcode`, `alsoInverted` |
+| `AztecCodeRequest.builder(content)` | `size`, `margin`, `errorCorrectionPercent`, `maxInputBytes` |
+| `BarCodeRequest.builder(content, format)` | `size`, `margin` |
+| `QrCodeStyle.builder()` | `foregroundColor`, `gradientEndColor`, `eyeColor`, `backgroundColor`, `cornerRadius` |
+| `QrCodeLogo.builder(image)` | `size`, `padding`, `backgroundColor`, `cornerRadius` |
+
+Note: `InputStream` and `OutputStream` passed by the caller are **never closed by the library**.
+
+## 8. Core Usage / API
+
+All three facades share the same usage pattern:
+
+| Facade | Convenience generation | Advanced generation | Decode inputs |
+|:---|:---|:---|:---|
+| `QrCodes` | `encode`, `colorful`, `withLogo` | `QrCodeRequest` via `encoder()` | `byte[]`, `BufferedImage`, `File`, `Path`, `InputStream` |
+| `AztecCodes` | `encode` | `AztecCodeRequest` | same as above |
+| `BarCodes` | `ean13` | `BarCodeRequest` | same as above |
+
+`CodeOutput` API:
+
+- `getBytes()` — rendered bytes (PNG, or SVG text)
+- `image()` — `Optional<BufferedImage>`
+- `base64()` / `dataUri()` — Base64 and Data URI strings
+- `writeTo(OutputStream)` — stream out the bytes
+- `getWidth()` / `getHeight()` / `getMimeType()` — metadata
+
+**Design constraints**
+
+- QR's L/M/Q/H and Aztec's error-correction percent are different semantics and are modeled separately.
+- 1D formats expose no Logo / gradient / frame options — invalid parameters are not exposed.
+- All three code types share genuinely identical output and decode result types; weak-typed hints are not part of the public API.
+- The core never downloads remote URLs, avoiding SSRF risks.
+
+## 9. Testing & Build
+
+```bash
+./mvnw clean verify     # unit tests + JaCoCo coverage report (all 25 test classes, 188 @Test methods)
+./mvnw clean test       # tests only, skip the coverage gate
+```
+
+**Coverage strategy** (rules defined in the POM's `jacoco-maven-plugin`):
+
+- Active check at `verify`: bundle-level LINE coverage ≥ 90% (`haltOnFailure=false`).
+- Per-file rules (in `pluginManagement`): all regular source files target LINE = BRANCH = 100%; the files with defensive catch blocks (`CodeImageSupport`, `DefaultQrCodeEncoder`, `DefaultQrCodeDecoder`, `BarCodes`, `QrCodeFrame`, `QrCodeDecodeRequest`, `source/BufferedImageLuminanceSource`, `source/MatrixToImageWriter`) are relaxed to LINE ≥ 90% / BRANCH ≥ 75%; `AztecCodes` BRANCH ≥ 45%; `CodeImageSupport` LINE ≥ 70%. Those catch branches depend on ZXing upstream / JDK `ImageIO` behavior that cannot be reached naturally in the standard test environment.
+
+**Test coverage by area**
+
+| Area | Test classes | Coverage |
+|:---|:---|:---|
+| Facades | `QrCodesTests`, `AztecCodesTests`, `BarCodesTests`, `CodeImageSupportTests` | 5 input forms, round-trips for all supported formats, error codes, interface default methods |
+| Encoders / decoders | `QrCodeEncoderTests`, `DefaultQrCodeEncoderTests`, `QrCodeDecoderTests`, `DefaultQrCodeDecoderTests` | PNG / SVG, outer frames, Logo, selfCheck, CapacityExceeded, oversized sizes |
+| Models | `model.*Tests` (9 classes) | Builder setters, constructor validation, defensive copies, `base64`/`dataUri` consistency, `CodeResult.from(Result)` |
+| Frames | `frame.QrCodeFrameTests`, `frame.QrCodeTextElementTests`, `frame.QrCodeImageElementTests` | Ordering, zIndex, bounds validation, required block element |
+| Exceptions | `exception.*Tests` (3 classes) | Error codes / constructors / serialization |
+| ZXing support | `source.BufferedImageLuminanceSourceTests`, `source.MatrixToImageWriterTests` | ABGR / USHORT_GRAY conversions, rotation, IO exceptions |
+
+**CI** (`.github/workflows/maven.yml`): runs `./mvnw verify` on push / pull_request to `main` and `release/*` (plus `workflow_dispatch`); JDK 8 + Maven 3.9; caches `~/.m2/repository`; uploads `target/site/jacoco` and `target/surefire-reports` as artifacts (14-day retention).
+
+## 10. Versioning & Branches
+
+| Branch | JDK | Version pattern | Notes |
+|:---|:---|:---|:---|
+| `feature/1.0.x` | 8 | `1.0.x.*` | Current line; ZXing core 3.5.4 |
+| `feature/2.0.x` | 17 | `2.0.x.*` | Next generation line |
+| `feature/3.0.x` | 21 | `3.0.x.*` | Latest line |
+
+- Snapshot versions follow the `1.0.x.yyyyMMdd-SNAPSHOT` scheme; releases are tagged `v{version}` and published through the project's private repository and GitHub Releases.
+- The `1.0.x` line is the actively maintained JDK 8 line; upgrade to `feature/2.0.x` (JDK 17) or `feature/3.0.x` (JDK 21) for newer JDK baselines.
+
+## 11. Contributing & License
+
+Contributions are welcome — please open an issue or a pull request on GitHub.
+
+This project is licensed under the **Apache License, Version 2.0**. See the [LICENSE](./LICENSE) file for details.
