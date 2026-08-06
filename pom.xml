@@ -4,6 +4,8 @@
 
     <groupId>io.github.easy4j</groupId>
     <artifactId>zxing-extension</artifactId>
+	<name>${project.groupId}:${project.artifactId}</name>
+	<url>https://github.com/easy-4-java/${project.artifactId}</url>
     <version>1.0.x.20260630-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>${project.groupId}:${project.artifactId}</name>
@@ -48,7 +50,7 @@
 	</distributionManagement>
 
     <properties>
-        <central-publishing-maven-plugin.version>0.7.0</central-publishing-maven-plugin.version>
+        <central-publishing-maven-plugin.version>0.11.0</central-publishing-maven-plugin.version>
 		<java.version>1.8</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
@@ -77,7 +79,7 @@
         <maven-resources-plugin.version>3.5.0</maven-resources-plugin.version>
         <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
         <maven-source-plugin.version>3.4.0</maven-source-plugin.version>
-        <maven-central-publishing-plugin.version>0.10.0</maven-central-publishing-plugin.version>
+        <maven-central-publishing-plugin.version>0.11.0</maven-central-publishing-plugin.version>
         <checker-qual.version>3.48.3</checker-qual.version>
 
         
@@ -92,7 +94,8 @@
         
         <jacoco.branch.minimum.aztec>0.45</jacoco.branch.minimum.aztec>
         <jacoco.line.minimum.image>0.70</jacoco.line.minimum.image>
-    </properties>
+    		<jacoco-maven-plugin.version>0.8.15</jacoco-maven-plugin.version>
+	</properties>
 
     <dependencyManagement>
         <dependencies>
@@ -455,6 +458,69 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+		<plugins>
+						<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>${jacoco-maven-plugin.version}</version>
+				<executions>
+					<execution>
+						<id>prepare-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>report</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>check</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+						<configuration>
+							<haltOnFailure>false</haltOnFailure>
+							<rules>
+								<rule>
+									<element>BUNDLE</element>
+									<limits>
+										<limit>
+											<counter>LINE</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>0.90</minimum>
+										</limit>
+									</limits>
+								</rule>
+							</rules>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>${maven-compiler-plugin.version}</version>
+				<configuration>
+					<source>${java.version}</source>
+					<target>${java.version}</target>
+					<parameters>true</parameters>
+					<encoding>${project.build.sourceEncoding}</encoding>
+					<maxmem>512M</maxmem>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+							<version>${lombok.version}</version>
+						</path>
+					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
+		</plugins>
         </build>
 
     <profiles>
