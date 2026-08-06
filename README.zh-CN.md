@@ -1,13 +1,10 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md)
-
 # zxing-extension
 
-![Java](https://img.shields.io/badge/Java-8-blue)
-![License](https://img.shields.io/badge/License-Apache%202.0-blue)
+[English](./README.md) | [简体中文](./README.zh-CN.md)
 
-**ZXing Extensions — QR Code and Bar Code utilities** —— 基于 ZXing Core 3.5.4 的纯 Java 扩展库，提供 QR Code、Aztec 和一维条形码的生成与解析，配套类型化请求模型与统一的输出 / 结果对象。
+ZXing Extensions — QR Code and Bar Code utilities —— 基于 ZXing Core 3.5.4 的纯 Java 扩展库，提供 QR Code、Aztec 和一维条形码的生成与解析，配套类型化请求模型与统一的输出 / 结果对象。
 
-**导航**
+## 目录
 
 - [1. 项目概述](#1-项目概述)
 - [2. 能力与状态](#2-能力与状态)
