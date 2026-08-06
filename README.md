@@ -1,13 +1,10 @@
-[English](./README.md) | [简体中文](./README.zh-CN.md)
-
 # zxing-extension
 
-![Java](https://img.shields.io/badge/Java-17-blue)
-![License](https://img.shields.io/badge/License-Apache%202.0-blue)
+[English](./README.md) | [简体中文](./README.zh-CN.md)
 
-**ZXing Extensions — QR Code and Bar Code utilities** — a pure-Java extension library built on ZXing Core 3.5.4 for generating and decoding QR Codes, Aztec codes and 1D barcodes, with typed request models and unified output/result objects.
+ZXing Extensions — QR Code and Bar Code utilities — a pure-Java extension library built on ZXing Core 3.5.4 for generating and decoding QR Codes, Aztec codes and 1D barcodes, with typed request models and unified output/result objects.
 
-**Navigation**
+## Table of Contents
 
 - [1. Project Overview](#1-project-overview)
 - [2. Features & Status](#2-features--status)
