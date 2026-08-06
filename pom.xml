@@ -64,7 +64,7 @@
         <slf4j.version>2.0.18</slf4j.version>
         <commons-lang3.version>3.20.0</commons-lang3.version>
         <lombok.version>1.18.46</lombok.version>
-        <junit.version>5.11.4</junit.version>
+        <junit.version>4.13.2</junit.version>
         <assertj.version>3.25.3</assertj.version>
         <maven.version>3.0</maven.version>
         <!-- Maven Plugin versions -->
@@ -91,7 +91,9 @@
         <jacoco.branch.minimum.aztec>0.45</jacoco.branch.minimum.aztec>
         <jacoco.line.minimum.image>0.70</jacoco.line.minimum.image>
         <jacoco-maven-plugin.version>0.8.15</jacoco-maven-plugin.version>
-    </properties>
+    
+		<junit-jupiter.version>6.1.0</junit-jupiter.version>
+		<commons-lang.version>2.6</commons-lang.version></properties>
 
     <!-- 依赖版本统一管理（dependencyManagement） -->
     <dependencyManagement>
@@ -136,7 +138,7 @@
             <dependency>
                 <groupId>org.junit</groupId>
                 <artifactId>junit-bom</artifactId>
-                <version>${junit.version}</version>
+                <version>${junit-jupiter.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -153,13 +155,13 @@
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter</artifactId>
                 <scope>test</scope>
-            <version>5.11.4</version></dependency>
+            <version>${junit-jupiter.version}</version></dependency>
             <!-- For AssertJ -->
             <dependency>
                 <groupId>org.assertj</groupId>
                 <artifactId>assertj-core</artifactId>
                 <scope>test</scope>
-            <version>3.27.7</version></dependency>
+            <version>${assertj.version}</version></dependency>
         </dependencies>
     </dependencyManagement>
 
