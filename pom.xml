@@ -535,6 +535,116 @@
                         <waitUntil>published</waitUntil>
                     </configuration>
                 </plugin>
+
+                <!-- https://mvnrepository.com/artifact/org.jacoco/jacoco-maven-plugin -->
+                <plugin>
+                    <!-- 覆盖率插件：生成覆盖率报告并校验测试覆盖率（目标 90%） -->
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>${jacoco.version}</version>
+                    <executions>
+                        <execution>
+                            <id>prepare-agent</id>
+                            <goals>
+                                <goal>prepare-agent</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>report</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>report</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>check</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                            <configuration>
+                                <rules>
+                                    <rule>
+                                        <element>SOURCEFILE</element>
+                                        <includes>
+                                            <include>com/google/zxing/DefaultQrCodeEncoder.java</include>
+                                            <include>com/google/zxing/DefaultQrCodeDecoder.java</include>
+                                            <include>com/google/zxing/BarCodes.java</include>
+                                            <include>com/google/zxing/frame/QrCodeFrame.java</include>
+                                            <include>com/google/zxing/model/QrCodeDecodeRequest.java</include>
+                                            <include>com/google/zxing/source/BufferedImageLuminanceSource.java</include>
+                                            <include>com/google/zxing/source/MatrixToImageWriter.java</include>
+                                        </includes>
+                                        <limits>
+                                            <limit>
+                                                <counter>LINE</counter>
+                                                <value>COVEREDRATIO</value>
+                                                <minimum>${jacoco.line.minimum.io}</minimum>
+                                            </limit>
+                                            <limit>
+                                                <counter>BRANCH</counter>
+                                                <value>COVEREDRATIO</value>
+                                                <minimum>${jacoco.branch.minimum.io}</minimum>
+                                            </limit>
+                                        </limits>
+                                    </rule>
+                                    <rule>
+                                        <element>SOURCEFILE</element>
+                                        <includes>
+                                            <include>com/google/zxing/AztecCodes.java</include>
+                                        </includes>
+                                        <limits>
+                                            <limit>
+                                                <counter>BRANCH</counter>
+                                                <value>COVEREDRATIO</value>
+                                                <minimum>${jacoco.branch.minimum.aztec}</minimum>
+                                            </limit>
+                                        </limits>
+                                    </rule>
+                                    <rule>
+                                        <element>SOURCEFILE</element>
+                                        <includes>
+                                            <include>com/google/zxing/CodeImageSupport.java</include>
+                                        </includes>
+                                        <limits>
+                                            <limit>
+                                                <counter>LINE</counter>
+                                                <value>COVEREDRATIO</value>
+                                                <minimum>${jacoco.line.minimum.image}</minimum>
+                                            </limit>
+                                        </limits>
+                                    </rule>
+                                    <rule>
+                                        <element>SOURCEFILE</element>
+                                        <excludes>
+                                            <exclude>com/google/zxing/CodeImageSupport.java</exclude>
+                                            <exclude>com/google/zxing/DefaultQrCodeEncoder.java</exclude>
+                                            <exclude>com/google/zxing/DefaultQrCodeDecoder.java</exclude>
+                                            <exclude>com/google/zxing/AztecCodes.java</exclude>
+                                            <exclude>com/google/zxing/BarCodes.java</exclude>
+                                            <exclude>com/google/zxing/frame/QrCodeFrame.java</exclude>
+                                            <exclude>com/google/zxing/model/QrCodeDecodeRequest.java</exclude>
+                                            <exclude>com/google/zxing/source/BufferedImageLuminanceSource.java</exclude>
+                                            <exclude>com/google/zxing/source/MatrixToImageWriter.java</exclude>
+                                        </excludes>
+                                        <limits>
+                                            <limit>
+                                                <counter>LINE</counter>
+                                                <value>COVEREDRATIO</value>
+                                                <minimum>${jacoco.line.minimum}</minimum>
+                                            </limit>
+                                            <limit>
+                                                <counter>BRANCH</counter>
+                                                <value>COVEREDRATIO</value>
+                                                <minimum>${jacoco.branch.minimum}</minimum>
+                                            </limit>
+                                        </limits>
+                                    </rule>
+                                </rules>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -591,6 +701,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${maven-compiler-plugin.version}</version>
                 <configuration>
+                    <release>${maven.compiler.release}</release>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
                     <!-- 保留方法参数名，支持 Spring MVC 按参数名绑定 -->
