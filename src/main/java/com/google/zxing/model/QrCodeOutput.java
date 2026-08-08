@@ -4,20 +4,26 @@ import java.awt.image.BufferedImage;
 import java.util.Objects;
 
 /**
- * 不可变的 QR Code 编码输出，相对 {@link CodeOutput} 增加了 {@link QrCodeImageFormat} 区分。
+ * Immutable QR Code encoding output. Extends {@link CodeOutput} with a
+ * {@link QrCodeImageFormat} discriminator.
+ *
+ * @author [@Loong Wan](https://github.com/loong10k)
+ * @since 3.0.0
+ * @see CodeOutput
+ * @see QrCodeImageFormat
  */
 public final class QrCodeOutput extends CodeOutput {
 
     private final QrCodeImageFormat format;
 
     /**
-     * 构造 QR 编码输出。
+     * Constructs a QR encoding output.
      *
-     * @param bytes         编码字节；不能为 {@code null}
-     * @param format        输出格式；不能为 {@code null}
-     * @param width         像素宽度
-     * @param height        像素高度
-     * @param bufferedImage SVG 时为 {@code null}
+     * @param bytes         the encoded bytes; must not be {@code null}
+     * @param format        the output format; must not be {@code null}
+     * @param width         the width in pixels
+     * @param height        the height in pixels
+     * @param bufferedImage the raster image; {@code null} for SVG output
      */
     public QrCodeOutput(byte[] bytes, QrCodeImageFormat format, int width, int height,
             BufferedImage bufferedImage) {
@@ -27,7 +33,9 @@ public final class QrCodeOutput extends CodeOutput {
     }
 
     /**
-     * @return 输出格式（PNG / SVG）
+     * Returns the output format (PNG or SVG).
+     *
+     * @return the {@link QrCodeImageFormat}
      */
     public QrCodeImageFormat getFormat() {
         return format;

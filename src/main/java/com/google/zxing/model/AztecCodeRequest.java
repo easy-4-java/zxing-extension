@@ -11,27 +11,33 @@ import com.google.zxing.aztec.encoder.Encoder;
 import lombok.Getter;
 
 /**
- * 不可变的 Aztec 编码请求。
+ * Immutable Aztec barcode encoding request.
  *
- * <p>默认值：
+ * <p>Defaults:</p>
  * <ul>
- *     <li>宽高：{@link #DEFAULT_SIZE}（258 像素）；</li>
- *     <li>纠错百分比：{@link #DEFAULT_ERROR_CORRECTION_PERCENT}（来自 ZXing
- *         {@code Encoder.DEFAULT_EC_PERCENT}）；</li>
- *     <li>margin：{@link #DEFAULT_MARGIN}（2 像素）；</li>
- *     <li>charset：UTF-8。</li>
+ *     <li>Width and height: {@link #DEFAULT_SIZE} (258 pixels);</li>
+ *     <li>Error correction percent: {@link #DEFAULT_ERROR_CORRECTION_PERCENT}
+ *         (from ZXing {@code Encoder.DEFAULT_EC_PERCENT});</li>
+ *     <li>Margin: {@link #DEFAULT_MARGIN} (2 pixels);</li>
+ *     <li>Charset: UTF-8.</li>
  * </ul>
  *
- * <p>校验：content 非空白；width/height 大于 0；errorCorrectionPercent 在 [1,100]；margin 非负。
+ * <p>Validation: {@code content} must not be blank; {@code width} and
+ * {@code height} must be positive; {@code errorCorrectionPercent} must be in
+ * the range [1, 100]; {@code margin} must be non-negative.</p>
+ *
+ * @author [@Loong Wan](https://github.com/loong10k)
+ * @since 3.0.0
+ * @see com.google.zxing.AztecCodes
  */
 @Getter
 public final class AztecCodeRequest {
 
-    /** 默认输出宽高（像素）。 */
+    /** Default output width and height in pixels. */
     public static final int DEFAULT_SIZE = 258;
-    /** 默认纠错百分比；通常为 ZXing 上游默认。 */
+    /** Default error correction percent; typically the ZXing upstream default. */
     public static final int DEFAULT_ERROR_CORRECTION_PERCENT = Encoder.DEFAULT_EC_PERCENT;
-    /** 默认留白宽度（像素）。 */
+    /** Default quiet-zone margin in pixels. */
     public static final int DEFAULT_MARGIN = 2;
 
     private final String content;
@@ -63,15 +69,17 @@ public final class AztecCodeRequest {
     }
 
     /**
-     * @param content 编码内容；不能为 {@code null} 或空白
-     * @return 新 Builder
+     * Creates a new {@link Builder} with the given content.
+     *
+     * @param content the payload to encode; must not be {@code null} or blank
+     * @return a new builder instance
      */
     public static Builder builder(String content) {
         return new Builder(content);
     }
 
     /**
-     * Aztec 请求链式构造器。
+     * Fluent builder for {@link AztecCodeRequest} instances.
      */
     public static final class Builder {
 
@@ -87,9 +95,11 @@ public final class AztecCodeRequest {
         }
 
         /**
-         * @param width  宽（像素），必须大于 0
-         * @param height 高（像素），必须大于 0
-         * @return 当前 builder
+         * Sets the output dimensions.
+         *
+         * @param width  the width in pixels; must be positive
+         * @param height the height in pixels; must be positive
+         * @return this builder
          */
         public Builder size(int width, int height) {
             this.width = width;
@@ -98,8 +108,10 @@ public final class AztecCodeRequest {
         }
 
         /**
-         * @param errorCorrectionPercent 纠错百分比；取值 1-100
-         * @return 当前 builder
+         * Sets the error correction percent.
+         *
+         * @param errorCorrectionPercent the error correction percentage (1-100)
+         * @return this builder
          */
         public Builder errorCorrectionPercent(int errorCorrectionPercent) {
             this.errorCorrectionPercent = errorCorrectionPercent;
@@ -107,8 +119,10 @@ public final class AztecCodeRequest {
         }
 
         /**
-         * @param margin 留白（像素），非负
-         * @return 当前 builder
+         * Sets the quiet-zone margin.
+         *
+         * @param margin the margin in pixels; must be non-negative
+         * @return this builder
          */
         public Builder margin(int margin) {
             this.margin = margin;
@@ -116,8 +130,10 @@ public final class AztecCodeRequest {
         }
 
         /**
-         * @param charset 字符集；不能为 {@code null}
-         * @return 当前 builder
+         * Sets the character set used for encoding.
+         *
+         * @param charset the charset; must not be {@code null}
+         * @return this builder
          */
         public Builder charset(Charset charset) {
             this.charset = charset;
@@ -125,7 +141,9 @@ public final class AztecCodeRequest {
         }
 
         /**
-         * @return 不可变请求
+         * Validates and builds an immutable {@link AztecCodeRequest}.
+         *
+         * @return an immutable request
          */
         public AztecCodeRequest build() {
             return new AztecCodeRequest(this);

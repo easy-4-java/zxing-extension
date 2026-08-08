@@ -27,10 +27,16 @@ import javax.imageio.ImageIO;
 import com.google.zxing.common.BitMatrix;
 
 /**
- * Writes a {@link BitMatrix} to {@link BufferedImage}, file or stream. Provided
- * here instead of core since it depends on Java SE libraries.
- * 
+ * Renders a {@link BitMatrix} to a {@link BufferedImage}, file or output stream.
+ *
+ * <p>Provided here instead of the core module since it depends on Java SE
+ * libraries ({@code javax.imageio.ImageIO}).</p>
+ *
  * @author Sean Owen
+ * @author [@Loong Wan](https://github.com/loong10k)
+ * @since 3.0.0
+ * @see BufferedImageLuminanceSource
+ * @see BitMatrix
  */
 public final class MatrixToImageWriter {
 
@@ -41,11 +47,13 @@ public final class MatrixToImageWriter {
 	}
 
 	/**
-	 * Renders a {@link BitMatrix} as an image, where "false" bits are rendered as
-	 * white, and "true" bits are rendered as black.
+	 * Renders a {@link BitMatrix} as a {@link BufferedImage} where {@code true}
+	 * bits are rendered as black and {@code false} bits as white.
+	 *
+	 * @param matrix the bit matrix; must not be {@code null}
+	 * @return the rendered image
 	 */
 	public static BufferedImage toBufferedImage(BitMatrix matrix) {
-		// 第一步：将zxing生成的二维码图标矩阵绘制到BufferedImage，边距这时较大
 		int width = matrix.getWidth();
 		int height = matrix.getHeight();
 		BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
@@ -57,25 +65,36 @@ public final class MatrixToImageWriter {
 		return image;
 	}
 
+	/**
+	 * Renders a {@link BitMatrix} as a {@link BufferedImage} scaled to the
+	 * specified square size.
+	 *
+	 * @param matrix the bit matrix; must not be {@code null}
+	 * @param size   the target width and height in pixels
+	 * @return the scaled image
+	 */
 	public static BufferedImage toBufferedImage(BitMatrix matrix, int size) {
-		// 因为二维码生成时，白边无法控制，去掉原有的白边，再添加自定义白边后，二维码大小与size大小就存在差异了，为了让新生成的二维码大小还是size大小，根据size重新生成图片
 		BufferedImage image = toBufferedImage(matrix);
-		// 根据size放大、缩小生成的二维码
 		return zoomInImage(image, size, size);
 	}
 
 	/**
-	 * 因为二维码边框设置那里不起作用，不管设置多少，都会生成白边，所以根据网上的例子进行修改，自定义控制白边宽度，
-	 *               该方法生成自定义白边框后的bitMatrix；
+	 * Creates a new {@link BitMatrix} with a custom quiet-zone margin around
+	 * the encoded data. The original white border produced by ZXing is
+	 * replaced by the specified margin.
+	 *
+	 * @param matrix the original bit matrix; must not be {@code null}
+	 * @param margin the desired quiet-zone width in pixels
+	 * @return a new {@link BitMatrix} with the custom margin applied
 	 */
 	public static BitMatrix updateBit(BitMatrix matrix, int margin) {
 		int tempM = margin * 2;
-		int[] rec = matrix.getEnclosingRectangle(); // 获取二维码图案的属性
+		int[] rec = matrix.getEnclosingRectangle();
 		int resWidth = rec[2] + tempM;
 		int resHeight = rec[3] + tempM;
-		BitMatrix resMatrix = new BitMatrix(resWidth, resHeight); // 按照自定义边框生成新的BitMatrix
+		BitMatrix resMatrix = new BitMatrix(resWidth, resHeight);
 		resMatrix.clear();
-		for (int i = margin; i < resWidth - margin; i++) { // 循环，将二维码图案绘制到新的bitMatrix中
+		for (int i = margin; i < resWidth - margin; i++) {
 			for (int j = margin; j < resHeight - margin; j++) {
 				if (matrix.get(rec[0] + (i - margin), rec[1] + (j - margin))) {
 					resMatrix.set(i, j);
@@ -86,7 +105,12 @@ public final class MatrixToImageWriter {
 	}
 
 	/**
-	 * 图片放大缩小
+	 * Scales a {@link BufferedImage} to the specified dimensions.
+	 *
+	 * @param originalImage the source image; must not be {@code null}
+	 * @param width         the target width in pixels
+	 * @param height        the target height in pixels
+	 * @return the scaled image
 	 */
 	public static BufferedImage zoomInImage(BufferedImage originalImage, int width, int height) {
 		BufferedImage newImage = new BufferedImage(width, height, originalImage.getType());
@@ -97,8 +121,12 @@ public final class MatrixToImageWriter {
 	}
 
 	/**
-	 * Writes a {@link BitMatrix} to a file.
-	 * 
+	 * Writes a {@link BitMatrix} to a file in the specified image format.
+	 *
+	 * @param matrix the bit matrix; must not be {@code null}
+	 * @param format the ImageIO format name (e.g. {@code "png"})
+	 * @param file   the target file; must not be {@code null}
+	 * @throws IOException if writing fails
 	 * @see #toBufferedImage(BitMatrix)
 	 */
 	public static void writeToFile(BitMatrix matrix, String format, File file) throws IOException {
@@ -107,8 +135,13 @@ public final class MatrixToImageWriter {
 	}
 
 	/**
-	 * Writes a {@link BitMatrix} to a stream.
-	 * 
+	 * Writes a {@link BitMatrix} to an output stream in the specified image
+	 * format. The stream is <strong>not</strong> closed by this method.
+	 *
+	 * @param matrix the bit matrix; must not be {@code null}
+	 * @param format the ImageIO format name (e.g. {@code "png"})
+	 * @param stream the target output stream; must not be {@code null}
+	 * @throws IOException if writing fails
 	 * @see #toBufferedImage(BitMatrix)
 	 */
 	public static void writeToStream(BitMatrix matrix, String format, OutputStream stream) throws IOException {

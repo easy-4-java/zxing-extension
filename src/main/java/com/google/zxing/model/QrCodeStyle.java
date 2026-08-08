@@ -6,18 +6,26 @@ import java.util.Objects;
 import lombok.Getter;
 
 /**
- * 不可变的 QR Code 颜色样式。
+ * Immutable QR Code colour style.
  *
- * <p>字段语义：
+ * <p>Fields:</p>
  * <ul>
- *     <li>{@code foregroundColor}：数据模块主体颜色；</li>
- *     <li>{@code gradientEndColor}：可空；与前景色一同定义线性渐变；</li>
- *     <li>{@code backgroundColor}：背景色；</li>
- *     <li>{@code eyeColor}：可空；为码眼（三个 finder pattern）独立着色。</li>
+ *     <li>{@code foregroundColor} &mdash; the main data-module colour;</li>
+ *     <li>{@code gradientEndColor} &mdash; nullable; defines a linear gradient
+ *         together with the foreground colour;</li>
+ *     <li>{@code backgroundColor} &mdash; the background colour;</li>
+ *     <li>{@code eyeColor} &mdash; nullable; colours the three finder-pattern
+ *         (eye) squares independently.</li>
  * </ul>
  *
- * <p>{@link #isGradient()} 当渐变色非空且与前景色不同时返回 {@code true}。
- * {@link #colorAt(double)} 在 ratio 越界时会截断到 [0,1]。
+ * <p>{@link #isGradient()} returns {@code true} when the gradient-end colour
+ * is non-{@code null} and differs from the foreground colour.
+ * {@link #colorAt(double)} clamps the ratio to [0, 1] before interpolating;
+ * for non-gradient styles it always returns {@code foregroundColor}.</p>
+ *
+ * @author [@Loong Wan](https://github.com/loong10k)
+ * @since 3.0.0
+ * @see QrCodeRequest
  */
 @Getter
 public final class QrCodeStyle {
@@ -35,14 +43,19 @@ public final class QrCodeStyle {
     }
 
     /**
-     * @return 内置单色样式（黑前景 + 白背景）
+     * Returns a built-in monochrome style (black foreground, white background).
+     *
+     * @return a monochrome {@link QrCodeStyle}
      */
     public static QrCodeStyle monochrome() {
         return builder().build();
     }
 
     /**
-     * @return 内置高对比度彩色渐变样式，附带独立码眼色
+     * Returns a built-in high-contrast colourful gradient style with
+     * independent eye colour.
+     *
+     * @return a colourful {@link QrCodeStyle}
      */
     public static QrCodeStyle colorful() {
         return builder()
@@ -53,25 +66,31 @@ public final class QrCodeStyle {
     }
 
     /**
-     * @return 新 Builder
+     * Creates a new {@link Builder}.
+     *
+     * @return a new builder instance
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * @return 是否启用渐变（gradientEndColor 非空且不等于前景色）
+     * Returns whether gradient rendering is enabled (gradient-end colour is
+     * non-{@code null} and differs from the foreground colour).
+     *
+     * @return {@code true} if gradient is active
      */
     public boolean isGradient() {
         return Objects.nonNull(gradientEndColor) && !foregroundColor.equals(gradientEndColor);
     }
 
     /**
-     * 计算渐变在给定纵向比例上的颜色；ratio 越界会被截断到 [0,1]；
-     * 非渐变样式返回 {@code foregroundColor}。
+     * Computes the interpolated colour at the given vertical ratio.
+     * The ratio is clamped to [0, 1]; for non-gradient styles the
+     * foreground colour is always returned.
      *
-     * @param ratio 比例，0 → 顶部、1 → 底部
-     * @return 插值得到的颜色
+     * @param ratio the vertical ratio (0 = top, 1 = bottom)
+     * @return the interpolated {@link Color}
      */
     public Color colorAt(double ratio) {
         if (!isGradient()) {
@@ -90,7 +109,7 @@ public final class QrCodeStyle {
     }
 
     /**
-     * 颜色样式链式构造器。
+     * Fluent builder for {@link QrCodeStyle} instances.
      */
     public static final class Builder {
 
@@ -103,8 +122,10 @@ public final class QrCodeStyle {
         }
 
         /**
-         * @param foregroundColor 前景色；不能为 {@code null}
-         * @return 当前 builder
+         * Sets the foreground (data-module) colour.
+         *
+         * @param foregroundColor the foreground colour; must not be {@code null}
+         * @return this builder
          */
         public Builder foregroundColor(Color foregroundColor) {
             this.foregroundColor = foregroundColor;
@@ -112,8 +133,11 @@ public final class QrCodeStyle {
         }
 
         /**
-         * @param gradientEndColor 渐变终点色；可为 {@code null}（不渐变）
-         * @return 当前 builder
+         * Sets the gradient-end colour. A value of {@code null} disables
+         * gradient rendering.
+         *
+         * @param gradientEndColor the gradient-end colour; may be {@code null}
+         * @return this builder
          */
         public Builder gradientEndColor(Color gradientEndColor) {
             this.gradientEndColor = gradientEndColor;
@@ -121,8 +145,10 @@ public final class QrCodeStyle {
         }
 
         /**
-         * @param backgroundColor 背景色；不能为 {@code null}
-         * @return 当前 builder
+         * Sets the background colour.
+         *
+         * @param backgroundColor the background colour; must not be {@code null}
+         * @return this builder
          */
         public Builder backgroundColor(Color backgroundColor) {
             this.backgroundColor = backgroundColor;
@@ -130,8 +156,10 @@ public final class QrCodeStyle {
         }
 
         /**
-         * @param eyeColor 码眼三定位角的颜色；可为 {@code null}
-         * @return 当前 builder
+         * Sets the finder-pattern (eye) colour.
+         *
+         * @param eyeColor the eye colour; may be {@code null}
+         * @return this builder
          */
         public Builder eyeColor(Color eyeColor) {
             this.eyeColor = eyeColor;
@@ -139,7 +167,9 @@ public final class QrCodeStyle {
         }
 
         /**
-         * @return 不可变样式
+         * Validates and builds an immutable {@link QrCodeStyle}.
+         *
+         * @return an immutable style
          */
         public QrCodeStyle build() {
             return new QrCodeStyle(this);

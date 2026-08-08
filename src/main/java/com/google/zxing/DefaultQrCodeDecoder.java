@@ -12,6 +12,7 @@ import java.util.Objects;
 
 import javax.imageio.ImageIO;
 
+import com.google.zxing.common.HybridBinarizer;
 import com.google.zxing.multi.GenericMultipleBarcodeReader;
 import com.google.zxing.source.BufferedImageLuminanceSource;
 

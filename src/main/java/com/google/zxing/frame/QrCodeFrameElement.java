@@ -1,35 +1,55 @@
 package com.google.zxing.frame;
 
 /**
- * 外套壳上可定位元素的位置 + zIndex 契约。
+ * Position and zIndex contract for elements placed on a {@link QrCodeFrame} canvas.
  *
- * <p>所有 {@link QrCodeFrameElement} 都必须报告其矩形位置和层级，{@link QrCodeFrame}
- * 据此校验完全包含关系和 zIndex 排序。
+ * <p>All {@link QrCodeFrameElement} implementations must report their rectangular
+ * bounds and z-order. {@link QrCodeFrame} uses these values to enforce full
+ * containment within the canvas and to sort elements by z-order.</p>
+ *
+ * @author [@Loong Wan](https://github.com/loong10k)
+ * @since 3.0.0
+ * @see QrCodeFrame
+ * @see QrCodeBlockElement
+ * @see QrCodeTextElement
+ * @see QrCodeImageElement
  */
 public interface QrCodeFrameElement {
 
     /**
-     * @return 左上角 X（像素），非负
+     * Returns the left X coordinate of this element in pixels (non-negative).
+     *
+     * @return the left X coordinate
      */
     int getX();
 
     /**
-     * @return 左上角 Y（像素），非负
+     * Returns the top Y coordinate of this element in pixels (non-negative).
+     *
+     * @return the top Y coordinate
      */
     int getY();
 
     /**
-     * @return 宽度（像素），严格大于 0
+     * Returns the width of this element in pixels (strictly positive).
+     *
+     * @return the width in pixels
      */
     int getWidth();
 
     /**
-     * @return 高度（像素），严格大于 0
+     * Returns the height of this element in pixels (strictly positive).
+     *
+     * @return the height in pixels
      */
     int getHeight();
 
     /**
-     * @return zIndex，相同值保持添加顺序
+     * Returns the z-order index; elements with higher values render on top of
+     * elements with lower values. Elements sharing the same z-order preserve
+     * their insertion order.
+     *
+     * @return the z-order index
      */
     int getZIndex();
 }

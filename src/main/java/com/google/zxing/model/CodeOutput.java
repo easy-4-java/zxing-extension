@@ -8,36 +8,45 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * 不可变的编码结果，是 QR / Aztec / BarCode 共享的输出类型。
+ * Immutable encoding output shared across QR, Aztec and one-dimensional
+ * barcode paths.
  *
- * <p>约定：
+ * <p>Contracts:</p>
  * <ul>
- *     <li>{@link #getBytes()} 每次都返回内部字节数组的防御性拷贝。</li>
- *     <li>{@link #writeTo(OutputStream)} 不会关闭调用方持有的输出流。</li>
- *     <li>{@link #image()} 在仅有 SVG 等无栅格表示时返回 {@link Optional#empty()}。</li>
+ *     <li>{@link #getBytes()} returns a defensive copy of the internal byte
+ *         array on every call.</li>
+ *     <li>{@link #writeTo(OutputStream)} does <strong>not</strong> close the
+ *         caller-supplied output stream.</li>
+ *     <li>{@link #image()} returns {@link Optional#empty()} when no raster
+ *         representation is available (e.g. SVG output).</li>
  * </ul>
+ *
+ * @author [@Loong Wan](https://github.com/loong10k)
+ * @since 3.0.0
+ * @see QrCodeOutput
+ * @see CodeResult
  */
 public class CodeOutput {
 
-    /** 编码字节；外部不可见。 */
+    /** Encoded bytes; not externally visible. */
     private final byte[] bytes;
-    /** MIME 类型；非空。 */
+    /** MIME type; never {@code null}. */
     private final String mimeType;
-    /** 输出宽度（像素），严格大于 0。 */
+    /** Output width in pixels; strictly positive. */
     private final int width;
-    /** 输出高度（像素），严格大于 0。 */
+    /** Output height in pixels; strictly positive. */
     private final int height;
-    /** 可选栅格图像，非 PNG 等栅格格式为 {@code null}。 */
+    /** Optional raster image; {@code null} for non-raster formats such as SVG. */
     private final BufferedImage bufferedImage;
 
     /**
-     * 构造输出。
+     * Constructs an output instance.
      *
-     * @param bytes         编码字节；不能为 {@code null}
-     * @param mimeType      MIME 类型；不能为 {@code null}
-     * @param width         像素宽度，必须大于 0
-     * @param height        像素高度，必须大于 0
-     * @param bufferedImage 可选 BufferedImage；可为 {@code null}
+     * @param bytes         the encoded bytes; must not be {@code null}
+     * @param mimeType      the MIME type; must not be {@code null}
+     * @param width         the width in pixels; must be positive
+     * @param height        the height in pixels; must be positive
+     * @param bufferedImage optional {@link BufferedImage}; may be {@code null}
      */
     public CodeOutput(byte[] bytes, String mimeType, int width, int height, BufferedImage bufferedImage) {
         this.bytes = Objects.requireNonNull(bytes, "bytes must not be null").clone();
@@ -51,59 +60,75 @@ public class CodeOutput {
     }
 
     /**
-     * @return 内部字节数组的防御性拷贝
+     * Returns a defensive copy of the encoded bytes.
+     *
+     * @return a new byte array containing the encoded data
      */
     public byte[] getBytes() {
         return bytes.clone();
     }
 
     /**
-     * @return MIME 类型（如 {@code image/png}）
+     * Returns the MIME type (e.g. {@code "image/png"}).
+     *
+     * @return the MIME type string
      */
     public String getMimeType() {
         return mimeType;
     }
 
     /**
-     * @return 像素宽度
+     * Returns the output width in pixels.
+     *
+     * @return the width
      */
     public int getWidth() {
         return width;
     }
 
     /**
-     * @return 像素高度
+     * Returns the output height in pixels.
+     *
+     * @return the height
      */
     public int getHeight() {
         return height;
     }
 
     /**
-     * @return 可选 {@link BufferedImage}；无栅格（如 SVG）时为空
+     * Returns the optional raster {@link BufferedImage}.
+     *
+     * @return an {@link Optional} containing the image, or empty for
+     *         non-raster formats such as SVG
      */
     public Optional<BufferedImage> image() {
         return Optional.ofNullable(bufferedImage);
     }
 
     /**
-     * @return 标准 Base64 编码（无换行）
+     * Returns the standard Base64 encoding of the output bytes (no line breaks).
+     *
+     * @return the Base64-encoded string
      */
     public String base64() {
         return Base64.getEncoder().encodeToString(bytes);
     }
 
     /**
-     * @return 形如 {@code data:image/png;base64,...} 的 Data URI
+     * Returns a data URI of the form {@code data:<mime>;base64,...}.
+     *
+     * @return the data URI string
      */
     public String dataUri() {
         return "data:" + mimeType + ";base64," + base64();
     }
 
     /**
-     * 将编码字节写入调用方持有的输出流；不会关闭该流。
+     * Writes the encoded bytes to the caller-owned output stream. The stream
+     * is <strong>not</strong> closed by this method.
      *
-     * @param outputStream 目标输出流；不能为 {@code null}
-     * @throws IOException 底层写入失败时抛出
+     * @param outputStream the target output stream; must not be {@code null}
+     * @throws IOException if the underlying write fails
      */
     public void writeTo(OutputStream outputStream) throws IOException {
         Objects.requireNonNull(outputStream, "outputStream must not be null");
