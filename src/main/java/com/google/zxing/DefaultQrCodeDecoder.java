@@ -12,14 +12,6 @@ import java.util.Objects;
 
 import javax.imageio.ImageIO;
 
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.BinaryBitmap;
-import com.google.zxing.DecodeHintType;
-import com.google.zxing.MultiFormatReader;
-import com.google.zxing.NotFoundException;
-import com.google.zxing.ReaderException;
-import com.google.zxing.Result;
-import com.google.zxing.common.HybridBinarizer;
 import com.google.zxing.multi.GenericMultipleBarcodeReader;
 import com.google.zxing.source.BufferedImageLuminanceSource;
 
@@ -29,21 +21,46 @@ import com.google.zxing.model.QrCodeDecodeRequest;
 import com.google.zxing.model.QrCodeDecodeResult;
 
 /**
- * 默认 QR Code 解码器，基于 ZXing {@link MultiFormatReader} 实现。
+ * Default {@link QrCodeDecoder} implementation, powered by ZXing's
+ * {@link MultiFormatReader}.
  *
- * <p>特性：
+ * <p>Highlights:</p>
  * <ul>
- *     <li>支持单 QR（{@link QrCodeDecodeRequest#isMultiple()} 为 {@code false}）与多 QR。</li>
- *     <li>多 QR 场景使用 {@link GenericMultipleBarcodeReader}；若 ZXing 未发现多码，
- *         自动降级到单 QR 解码以保证至少返回一条结果。</li>
- *     <li>防御性上限：字节输入不超过 {@link QrCodeDecodeRequest#getMaxInputBytes()}，
- *         像素量不超过 {@link QrCodeDecodeRequest#getMaxPixels()}。</li>
+ *   <li>Supports single-QR (when {@link QrCodeDecodeRequest#isMultiple()} is
+ *       {@code false}) and multi-QR decoding.</li>
+ *   <li>For multi-QR requests the
+ *       {@link GenericMultipleBarcodeReader} is used. When ZXing does not
+ *       report multiple codes, the decoder transparently falls back to single
+ *       decoding so that at least one result is returned whenever possible.</li>
+ *   <li>Defensive upper bounds are enforced: the byte payload cannot exceed
+ *       {@link QrCodeDecodeRequest#getMaxInputBytes()}, and the raster pixel
+ *       count cannot exceed {@link QrCodeDecodeRequest#getMaxPixels()}.</li>
  * </ul>
- * 任何 ZXing {@link ReaderException} 都会被翻译为
- * {@link QrCodeErrorCode#QRCODE_DECODE_NOT_FOUND} 的 {@link QrCodeException}。
+ *
+ * <p>Any ZXing {@link ReaderException} is translated into a
+ * {@link QrCodeException} carrying the stable
+ * {@link QrCodeErrorCode#QRCODE_DECODE_NOT_FOUND} code so callers can branch
+ * on the cause without parsing messages.</p>
+ *
+ * @author [@Loong Wan](https://github.com/loong10k)
+ * @since 3.0.0
+ * @see QrCodeDecoder
+ * @see QrCodeDecodeRequest
  */
 public final class DefaultQrCodeDecoder implements QrCodeDecoder {
 
+    /**
+     * Decodes the supplied {@link QrCodeDecodeRequest}.
+     *
+     * <p>For single-QR requests the returned list contains exactly one element;
+     * for multi-QR requests the list contains every successfully decoded QR
+     * code in decode order. The returned list is unmodifiable.</p>
+     *
+     * @param request the decode request; must not be {@code null}
+     * @return an unmodifiable list of decoded results (never {@code null})
+     * @throws QrCodeException if the request is invalid, the input is too large,
+     *         the image format is unsupported, or no QR code can be located
+     */
     @Override
     public List<QrCodeDecodeResult> decode(QrCodeDecodeRequest request) {
         Objects.requireNonNull(request, "request must not be null");
@@ -64,6 +81,14 @@ public final class DefaultQrCodeDecoder implements QrCodeDecoder {
         }
     }
 
+    /**
+     * Decodes a single QR code from the raster image.
+     *
+     * @param image the raster image; must not be {@code null}
+     * @param hints the decode hints; must not be {@code null}
+     * @return an array containing exactly one {@link Result}
+     * @throws ReaderException if ZXing cannot locate a QR code
+     */
     private Result[] decodeSingle(BufferedImage image, Map<DecodeHintType, Object> hints) throws ReaderException {
         MultiFormatReader reader = new MultiFormatReader();
         try {
@@ -73,6 +98,15 @@ public final class DefaultQrCodeDecoder implements QrCodeDecoder {
         }
     }
 
+    /**
+     * Decodes multiple QR codes, falling back to single-code decoding if the
+     * multiple-code reader reports nothing.
+     *
+     * @param image the raster image; must not be {@code null}
+     * @param hints the decode hints; must not be {@code null}
+     * @return an array of decoded {@link Result}s (never {@code null})
+     * @throws ReaderException if neither multi nor single decoding succeeds
+     */
     private Result[] decodeMultiple(BufferedImage image, Map<DecodeHintType, Object> hints) throws ReaderException {
         MultiFormatReader reader = new MultiFormatReader();
         try {
@@ -84,10 +118,25 @@ public final class DefaultQrCodeDecoder implements QrCodeDecoder {
         }
     }
 
+    /**
+     * Wraps the supplied image in a ZXing {@link BinaryBitmap} using a
+     * {@link HybridBinarizer} backed by {@link BufferedImageLuminanceSource}.
+     *
+     * @param image the raster image; must not be {@code null}
+     * @return a fresh {@link BinaryBitmap}
+     */
     private BinaryBitmap createBitmap(BufferedImage image) {
         return new BinaryBitmap(new HybridBinarizer(new BufferedImageLuminanceSource(image)));
     }
 
+    /**
+     * Builds the {@link DecodeHintType} hint map for the given request, copying
+     * charset, possible formats and the optional
+     * {@code TRY_HARDER}/{@code ALSO_INVERTED}/{@code PURE_BARCODE} flags.
+     *
+     * @param request the decode request; must not be {@code null}
+     * @return a mutable hint map
+     */
     private Map<DecodeHintType, Object> createHints(QrCodeDecodeRequest request) {
         Map<DecodeHintType, Object> hints = new EnumMap<DecodeHintType, Object>(DecodeHintType.class);
         hints.put(DecodeHintType.CHARACTER_SET, request.getCharset().name());
@@ -104,6 +153,15 @@ public final class DefaultQrCodeDecoder implements QrCodeDecoder {
         return hints;
     }
 
+    /**
+     * Loads the request's image bytes into a {@link BufferedImage}, honouring
+     * the configured byte-size limit.
+     *
+     * @param request the decode request; must not be {@code null}
+     * @return the decoded raster image
+     * @throws QrCodeException on I/O failure or when the input exceeds the
+     *         configured byte limit
+     */
     private BufferedImage readImage(QrCodeDecodeRequest request) {
         if (Objects.nonNull(request.getImage())) {
             return request.getImage();
@@ -126,6 +184,14 @@ public final class DefaultQrCodeDecoder implements QrCodeDecoder {
         }
     }
 
+    /**
+     * Verifies that the raster image's pixel count fits within the configured
+     * upper bound.
+     *
+     * @param request the decode request; must not be {@code null}
+     * @param image   the raster image; must not be {@code null}
+     * @throws QrCodeException when the pixel count exceeds the configured limit
+     */
     private void validateImage(QrCodeDecodeRequest request, BufferedImage image) {
         long pixels = (long) image.getWidth() * (long) image.getHeight();
         if (pixels <= 0 || pixels > request.getMaxPixels()) {

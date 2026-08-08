@@ -6,31 +6,49 @@ import com.google.zxing.model.QrCodeDecodeRequest;
 import com.google.zxing.model.QrCodeDecodeResult;
 
 /**
- * 框架无关的 QR Code 解码器接口。
+ * Framework-agnostic QR Code decoder SPI.
  *
- * <p>实现需遵循语义：
+ * <p>Implementations must honour the following contract:</p>
  * <ul>
- *     <li>{@link #decode(QrCodeDecodeRequest)} 返回不可变列表（即使是单码场景）。</li>
- *     <li>{@link #decodeFirst(QrCodeDecodeRequest)} 在没有 QR 时抛出 {@code QrCodeException} 而不是返回空。</li>
+ *   <li>{@link #decode(QrCodeDecodeRequest)} returns an <strong>unmodifiable</strong>
+ *       list &mdash; even in the single-QR case where the list has exactly one
+ *       element.</li>
+ *   <li>{@link #decodeFirst(QrCodeDecodeRequest)} throws
+ *       {@code QrCodeException} when no QR code can be found rather than
+ *       returning {@code null} or letting the caller deal with index-out-of-bounds
+ *       on an empty list.</li>
  * </ul>
+ *
+ * @author [@Loong Wan](https://github.com/loong10k)
+ * @since 3.0.0
+ * @see QrCodeDecodeRequest
+ * @see QrCodeDecodeResult
  */
 public interface QrCodeDecoder {
 
     /**
-     * 解码给定的输入，单码返回长度为 1 的列表，多码场景返回按解码顺序排列的结果。
+     * Decodes the supplied input.
      *
-     * @param request 解码请求；不能为 {@code null}
-     * @return 不可变的结果列表
-     * @throws com.google.zxing.exception.QrCodeException 参数无效、未找到 QR 或图像超大时抛出
+     * <p>For single-QR requests the returned list contains exactly one element;
+     * for multi-QR requests the list contains every successfully decoded QR
+     * code in decode order.</p>
+     *
+     * @param request the decode request; must not be {@code null}
+     * @return an unmodifiable, non-{@code null} list of decode results
+     * @throws com.google.zxing.exception.QrCodeException when the request is
+     *         invalid, no QR code can be located, or the input exceeds the
+     *         configured safety limits
      */
     List<QrCodeDecodeResult> decode(QrCodeDecodeRequest request);
 
     /**
-     * 解码并返回首条记录，等价于 {@code decode(request).get(0)}。
+     * Decodes and returns the first result; shorthand for
+     * {@code decode(request).get(0)}.
      *
-     * @param request 解码请求；不能为 {@code null}
-     * @return 第一条解码结果
-     * @throws com.google.zxing.exception.QrCodeException 当没有 QR 时抛出（替代空列表的索引越界）
+     * @param request the decode request; must not be {@code null}
+     * @return the first decode result
+     * @throws com.google.zxing.exception.QrCodeException when no QR code can be
+     *         located
      */
     default QrCodeDecodeResult decodeFirst(QrCodeDecodeRequest request) {
         return decode(request).get(0);
