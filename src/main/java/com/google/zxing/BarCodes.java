@@ -20,23 +20,47 @@ import com.google.zxing.model.CodeResult;
 import com.google.zxing.source.BufferedImageLuminanceSource;
 
 /**
- * 一维条形码静态门面。
+ * Static facade providing encode / decode entry points for one-dimensional
+ * barcode symbologies, built on top of ZXing's {@link MultiFormatWriter} and
+ * {@link MultiFormatReader}.
  *
- * <p>支持以下格式：
- * {@link BarcodeFormat#CODABAR}, {@link BarcodeFormat#CODE_39},
- * {@link BarcodeFormat#CODE_93}, {@link BarcodeFormat#CODE_128},
- * {@link BarcodeFormat#EAN_8}, {@link BarcodeFormat#EAN_13},
- * {@link BarcodeFormat#ITF}, {@link BarcodeFormat#UPC_A},
- * {@link BarcodeFormat#UPC_E}。
+ * <p>The supported formats are:</p>
+ * <ul>
+ *   <li>{@link BarcodeFormat#CODABAR}</li>
+ *   <li>{@link BarcodeFormat#CODE_39}</li>
+ *   <li>{@link BarcodeFormat#CODE_93}</li>
+ *   <li>{@link BarcodeFormat#CODE_128}</li>
+ *   <li>{@link BarcodeFormat#EAN_8}</li>
+ *   <li>{@link BarcodeFormat#EAN_13}</li>
+ *   <li>{@link BarcodeFormat#ITF}</li>
+ *   <li>{@link BarcodeFormat#UPC_A}</li>
+ *   <li>{@link BarcodeFormat#UPC_E}</li>
+ * </ul>
  *
- * <p>QR / Aztec / PDF417 等二维格式不被 {@link #encode(BarCodeRequest)} 接受。线程安全：
- * 内部仅调用 ZXing 的无状态 API 与不可变静态集合。
+ * <p>Two-dimensional formats such as {@code QR_CODE}, {@code AZTEC},
+ * {@code PDF_417} and {@code DATA_MATRIX} are rejected by
+ * {@link #encode(BarCodeRequest)}; callers must use
+ * {@code QrCodes} or {@code AztecCodes} instead.</p>
+ *
+ * <p>Thread safety: the facade only delegates to ZXing's stateless APIs and
+ * exposes an immutable {@link Set} of supported formats; concurrent calls are
+ * safe.</p>
+ *
+ * @author [@Loong Wan](https://github.com/loong10k)
+ * @since 3.0.0
+ * @see BarCodeRequest
+ * @see com.google.zxing.MultiFormatWriter
  */
 public final class BarCodes {
 
+    /**
+     * Shared, stateless ZXing writer used for every encode call.
+     */
     private static final MultiFormatWriter WRITER = new MultiFormatWriter();
 
-    /** 一维条形码支持的 ZXing {@link BarcodeFormat} 集合（不可变）。 */
+    /**
+     * Immutable set of one-dimensional barcode formats accepted by this facade.
+     */
     private static final Set<BarcodeFormat> SUPPORTED_FORMATS = Collections.unmodifiableSet(EnumSet.of(
             BarcodeFormat.CODABAR,
             BarcodeFormat.CODE_39,
@@ -52,23 +76,28 @@ public final class BarCodes {
     }
 
     /**
-     * 生成 EAN-13 条形码 PNG，使用 {@link BarCodeRequest} 的默认尺寸。
+     * Generates an EAN-13 barcode PNG using {@link BarCodeRequest}'s default
+     * dimensions.
      *
-     * @param content 12 位（自动补全校验位）或 13 位数字内容；不能为 {@code null} 或空白
-     * @return 编码后的 PNG
-     * @throws com.google.zxing.exception.CodeException 当 ZXing 编码失败时抛出
+     * @param content the 12-digit payload (the check digit will be auto-appended)
+     *                or a 13-digit payload already containing the check digit;
+     *                must not be {@code null} or blank
+     * @return the encoded PNG
+     * @throws com.google.zxing.exception.CodeException if ZXing fails to encode
      */
     public static CodeOutput ean13(String content) {
         return encode(BarCodeRequest.builder(content, BarcodeFormat.EAN_13).build());
     }
 
     /**
-     * 生成受支持的一维条形码 PNG。
+     * Generates a PNG for any of the supported one-dimensional barcode formats.
      *
-     * @param request 编码请求；不能为 {@code null}，其 {@link BarCodeRequest#getFormat()} 必须为支持的格式
-     * @return 编码后的 PNG
-     * @throws IllegalArgumentException 当请求或格式不受支持时抛出
-     * @throws com.google.zxing.exception.CodeException 当 ZXing 编码失败时抛出
+     * @param request the encode request; must not be {@code null} and its
+     *                {@link BarCodeRequest#getFormat()} must be one of the
+     *                supported formats
+     * @return the encoded PNG
+     * @throws IllegalArgumentException if the request or its format is unsupported
+     * @throws com.google.zxing.exception.CodeException if ZXing fails to encode
      */
     public static CodeOutput encode(BarCodeRequest request) {
         Objects.requireNonNull(request, "request must not be null");
@@ -89,22 +118,25 @@ public final class BarCodes {
     }
 
     /**
-     * 从编码图像字节中解析一维条形码。
+     * Decodes a one-dimensional barcode from a raw encoded image byte array
+     * (PNG, JPEG, etc.).
      *
-     * @param bytes  PNG/JPEG 等编码图像字节；不能为 {@code null}
-     * @return 解码结果
-     * @throws com.google.zxing.exception.CodeException 当 IO 失败或未发现条形码时抛出
+     * @param bytes encoded image bytes; must not be {@code null}
+     * @return the decode result
+     * @throws com.google.zxing.exception.CodeException on I/O failure or if no
+     *         supported barcode is found
      */
     public static CodeResult decode(byte[] bytes) {
         return decode(CodeImageSupport.read(bytes));
     }
 
     /**
-     * 从 {@link BufferedImage} 中解析一维条形码。
+     * Decodes a one-dimensional barcode from a {@link BufferedImage}.
      *
-     * @param image 图像；不能为 {@code null}
-     * @return 解码结果
-     * @throws com.google.zxing.exception.CodeException 当未发现条形码时抛出
+     * @param image the raster image; must not be {@code null}
+     * @return the decode result
+     * @throws com.google.zxing.exception.CodeException if no supported barcode
+     *         is found
      */
     public static CodeResult decode(BufferedImage image) {
         Objects.requireNonNull(image, "image must not be null");
@@ -123,33 +155,39 @@ public final class BarCodes {
     }
 
     /**
-     * 从图像文件中解析一维条形码。
+     * Decodes a one-dimensional barcode from an image file on disk.
      *
-     * @param file 图像文件；不能为 {@code null}
-     * @return 解码结果
-     * @throws com.google.zxing.exception.CodeException 当 IO 失败或未发现条形码时抛出
+     * @param file the image file; must not be {@code null}
+     * @return the decode result
+     * @throws com.google.zxing.exception.CodeException on I/O failure or if no
+     *         supported barcode is found
      */
     public static CodeResult decode(File file) {
         return decode(CodeImageSupport.read(file));
     }
 
     /**
-     * 从图像 {@link Path} 中解析一维条形码。
+     * Decodes a one-dimensional barcode from a {@link Path} pointing at an
+     * image file.
      *
-     * @param path 图像路径；不能为 {@code null}
-     * @return 解码结果
-     * @throws com.google.zxing.exception.CodeException 当 IO 失败或未发现条形码时抛出
+     * @param path the image path; must not be {@code null}
+     * @return the decode result
+     * @throws com.google.zxing.exception.CodeException on I/O failure or if no
+     *         supported barcode is found
      */
     public static CodeResult decode(Path path) {
         return decode(CodeImageSupport.read(path));
     }
 
     /**
-     * 从字节流中解析一维条形码。调用方负责流的关闭，库不会主动关闭它。
+     * Decodes a one-dimensional barcode from an arbitrary {@link InputStream}.
+     * The library does <strong>not</strong> close the stream; the caller
+     * retains ownership.
      *
-     * @param inputStream 字节流；不能为 {@code null}
-     * @return 解码结果
-     * @throws com.google.zxing.exception.CodeException 当 IO 失败或未发现条形码时抛出
+     * @param inputStream the byte stream; must not be {@code null}
+     * @return the decode result
+     * @throws com.google.zxing.exception.CodeException on I/O failure or if no
+     *         supported barcode is found
      */
     public static CodeResult decode(InputStream inputStream) {
         return decode(CodeImageSupport.read(inputStream));

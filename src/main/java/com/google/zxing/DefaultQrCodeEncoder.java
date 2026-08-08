@@ -15,7 +15,6 @@ import java.util.Objects;
 
 import javax.imageio.ImageIO;
 
-import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
@@ -36,35 +35,67 @@ import com.google.zxing.model.QrCodeRequest;
 import com.google.zxing.model.QrCodeStyle;
 
 /**
- * 默认 QR Code 编码器，基于 ZXing {@link MultiFormatWriter} 实现。
+ * Default {@link QrCodeEncoder} implementation powered by ZXing's
+ * {@link MultiFormatWriter}.
  *
- * <p>支持：
+ * <p>Supported features:</p>
  * <ul>
- *     <li>PNG 与 SVG 两种输出格式。</li>
- *     <li>渐变色、码眼独立着色、Logo 叠加、外套壳（Frame）装饰。</li>
- *     <li>可选的 {@code selfCheck}，编码后立即调用
- *         {@link DefaultQrCodeDecoder} 反向解码验证内容一致。</li>
+ *   <li>Both PNG (raster) and SVG (vector) output formats.</li>
+ *   <li>Foreground gradients, independent finder-eye colouring, logo overlays
+ *       and decorative outer {@link QrCodeFrame}s.</li>
+ *   <li>An optional {@code selfCheck} flag: when enabled the encoder decodes
+ *       its own output via {@link DefaultQrCodeDecoder} to confirm the
+ *       rendered content matches the source content.</li>
  * </ul>
  *
- * <p>安全约束：
+ * <p>Safety guards:</p>
  * <ul>
- *     <li>{@link #MAX_DIMENSION}：单边不超过 4096 像素。</li>
- *     <li>{@link #MAX_PIXELS}：总像素数不超过 16,777,216（4096²）。</li>
- *     <li>{@link #MAX_LOGO_RATIO}：Logo 任意边不超过 QR 区域的 20%。</li>
+ *   <li>{@link #MAX_DIMENSION}: each side of the output is capped at 4096
+ *       pixels.</li>
+ *   <li>{@link #MAX_PIXELS}: the total pixel count is capped at 16,777,216
+ *       (4096 &times; 4096).</li>
+ *   <li>{@link #MAX_LOGO_RATIO}: a logo edge may not exceed 20&nbsp;% of the
+ *       QR region's width or height.</li>
  * </ul>
- * 任何 ZXing 异常都会被翻译为携带稳定 {@link QrCodeErrorCode} 的 {@link QrCodeException}。
+ *
+ * <p>Every ZXing / IO exception is translated into a {@link QrCodeException}
+ * carrying a stable {@link QrCodeErrorCode}.</p>
+ *
+ * @author [@Loong Wan](https://github.com/loong10k)
+ * @since 3.0.0
+ * @see QrCodeEncoder
+ * @see QrCodeRequest
  */
 public final class DefaultQrCodeEncoder implements QrCodeEncoder {
 
-    /** 单边最大像素。 */
+    /**
+     * Maximum width or height of the output image, in pixels.
+     */
     private static final int MAX_DIMENSION = 4096;
-    /** 输出图像最大总像素。 */
+
+    /**
+     * Maximum total pixel count of the output image.
+     */
     private static final long MAX_PIXELS = 16_777_216L;
-    /** Logo 在 QR 区域中所占边长的最大比例。 */
+
+    /**
+     * Maximum ratio of a logo edge relative to the underlying QR region edge.
+     */
     private static final double MAX_LOGO_RATIO = 0.20D;
 
+    /**
+     * Shared, stateless ZXing writer used for every encode call.
+     */
     private final MultiFormatWriter writer = new MultiFormatWriter();
 
+    /**
+     * Encodes the supplied {@link QrCodeRequest} into a {@link QrCodeOutput}.
+     *
+     * @param request the encode request; must not be {@code null}
+     * @return an immutable {@link QrCodeOutput} containing the rendered bytes
+     * @throws QrCodeException if the request is invalid, exceeds the
+     *         configured safety limits, overflows capacity, or fails to render
+     */
     @Override
     public QrCodeOutput encode(QrCodeRequest request) {
         Objects.requireNonNull(request, "request must not be null");
@@ -87,6 +118,15 @@ public final class DefaultQrCodeEncoder implements QrCodeEncoder {
         }
     }
 
+    /**
+     * Renders the request as a PNG, optionally compositing the QR code onto a
+     * decorative frame.
+     *
+     * @param request the encode request; must not be {@code null}
+     * @return the PNG output
+     * @throws WriterException if ZXing fails to produce the bit matrix
+     * @throws IOException    on PNG writing failures
+     */
     private QrCodeOutput renderPng(QrCodeRequest request) throws WriterException, IOException {
         BufferedImage image;
         if (Objects.isNull(request.getFrame())) {
@@ -103,6 +143,15 @@ public final class DefaultQrCodeEncoder implements QrCodeEncoder {
                 image.getWidth(), image.getHeight(), image);
     }
 
+    /**
+     * Renders the bare QR code (no decorative frame) onto an ARGB image.
+     *
+     * @param request the encode request; must not be {@code null}
+     * @param width   target QR width in pixels; must be positive
+     * @param height  target QR height in pixels; must be positive
+     * @return the rendered image
+     * @throws WriterException if ZXing fails to produce the bit matrix
+     */
     private BufferedImage renderQrImage(QrCodeRequest request, int width, int height) throws WriterException {
         BitMatrix matrix = createMatrix(request, width, height);
         BufferedImage image = new BufferedImage(matrix.getWidth(), matrix.getHeight(), BufferedImage.TYPE_INT_ARGB);
@@ -125,6 +174,14 @@ public final class DefaultQrCodeEncoder implements QrCodeEncoder {
         return image;
     }
 
+    /**
+     * Renders the QR code onto a decorative {@link QrCodeFrame} canvas.
+     *
+     * @param request the encode request; must not be {@code null}
+     * @param frame   the frame to render into; must not be {@code null}
+     * @return the composited image
+     * @throws WriterException if ZXing fails to produce the bit matrix
+     */
     private BufferedImage renderFrameImage(QrCodeRequest request, QrCodeFrame frame) throws WriterException {
         BufferedImage canvas = new BufferedImage(frame.getWidth(), frame.getHeight(), BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = canvas.createGraphics();
@@ -152,6 +209,12 @@ public final class DefaultQrCodeEncoder implements QrCodeEncoder {
         return canvas;
     }
 
+    /**
+     * Renders a single text element using the supplied graphics context.
+     *
+     * @param graphics the target graphics context; must not be {@code null}
+     * @param element  the text element to render; must not be {@code null}
+     */
     private void drawText(Graphics2D graphics, QrCodeTextElement element) {
         int style = element.isBold() ? Font.BOLD : Font.PLAIN;
         graphics.setFont(new Font(element.getFontName(), style, element.getFontSize()));
@@ -160,6 +223,14 @@ public final class DefaultQrCodeEncoder implements QrCodeEncoder {
         graphics.drawString(element.getText(), element.getX(), baseline);
     }
 
+    /**
+     * Draws the {@link QrCodeLogo} (with rounded background) onto the centre
+     * of the supplied source image, enforcing the {@link #MAX_LOGO_RATIO} limit.
+     *
+     * @param source the image to overlay the logo onto; must not be {@code null}
+     * @param logo   the logo configuration; must not be {@code null}
+     * @throws QrCodeException if the logo's requested size exceeds the limit
+     */
     private void drawLogo(BufferedImage source, QrCodeLogo logo) {
         int maxWidth = Math.max(1, (int) Math.floor(source.getWidth() * MAX_LOGO_RATIO));
         int maxHeight = Math.max(1, (int) Math.floor(source.getHeight() * MAX_LOGO_RATIO));
@@ -184,6 +255,15 @@ public final class DefaultQrCodeEncoder implements QrCodeEncoder {
         }
     }
 
+    /**
+     * Renders the request as an SVG document, optionally compositing the QR
+     * code onto a decorative frame.
+     *
+     * @param request the encode request; must not be {@code null}
+     * @return the SVG output
+     * @throws WriterException if ZXing fails to produce the bit matrix
+     * @throws IOException    on embedded image writing failures
+     */
     private QrCodeOutput renderSvg(QrCodeRequest request) throws WriterException, IOException {
         int canvasWidth = Objects.isNull(request.getFrame()) ? request.getWidth() : request.getFrame().getWidth();
         int canvasHeight = Objects.isNull(request.getFrame()) ? request.getHeight() : request.getFrame().getHeight();
@@ -216,6 +296,19 @@ public final class DefaultQrCodeEncoder implements QrCodeEncoder {
         return new QrCodeOutput(bytes, QrCodeImageFormat.SVG, canvasWidth, canvasHeight, null);
     }
 
+    /**
+     * Appends an SVG snippet that renders a single QR code region (optionally
+     * with eye colour and logo overlay) at the supplied offset.
+     *
+     * @param svg     the SVG buffer to append to; must not be {@code null}
+     * @param request the encode request; must not be {@code null}
+     * @param xOffset horizontal offset in pixels
+     * @param yOffset vertical offset in pixels
+     * @param width   target QR width in pixels
+     * @param height  target QR height in pixels
+     * @throws WriterException if ZXing fails to produce the bit matrix
+     * @throws IOException    on embedded image writing failures
+     */
     private void appendSvgQr(StringBuilder svg, QrCodeRequest request, int xOffset, int yOffset, int width,
             int height) throws WriterException, IOException {
         BitMatrix matrix = createMatrix(request, width, height);
@@ -245,6 +338,19 @@ public final class DefaultQrCodeEncoder implements QrCodeEncoder {
         }
     }
 
+    /**
+     * Appends a single SVG {@code <path>} element rendering either the data
+     * modules or the finder-eye modules of the matrix.
+     *
+     * @param svg        the SVG buffer; must not be {@code null}
+     * @param matrix     the bit matrix to render; must not be {@code null}
+     * @param xOffset    horizontal offset in pixels
+     * @param yOffset    vertical offset in pixels
+     * @param fill       the SVG fill colour or gradient reference
+     * @param finderSize the side length of the finder-eye squares (0 disables detection)
+     * @param finderOnly when {@code true} only the finder-eye modules are drawn,
+     *                   otherwise only the data modules are drawn
+     */
     private void appendSvgMatrixPath(StringBuilder svg, BitMatrix matrix, int xOffset, int yOffset,
             String fill, int finderSize, boolean finderOnly) {
         svg.append("<path fill=\"").append(fill).append("\" d=\"");
@@ -269,6 +375,13 @@ public final class DefaultQrCodeEncoder implements QrCodeEncoder {
         svg.append("\"/>");
     }
 
+    /**
+     * Determines the side length of the finder-eye squares by reading the
+     * top-left run-length of the enclosing rectangle.
+     *
+     * @param matrix the bit matrix; must not be {@code null}
+     * @return the side length in pixels, or {@code 0} if the matrix is empty
+     */
     private int finderSize(BitMatrix matrix) {
         int[] rectangle = matrix.getEnclosingRectangle();
         if (Objects.isNull(rectangle)) {
@@ -283,6 +396,16 @@ public final class DefaultQrCodeEncoder implements QrCodeEncoder {
         return run;
     }
 
+    /**
+     * Returns whether the pixel at {@code (x, y)} belongs to a finder-eye square.
+     *
+     * @param matrix     the bit matrix; must not be {@code null}
+     * @param x          pixel X coordinate
+     * @param y          pixel Y coordinate
+     * @param finderSize the side length of the finder-eye squares
+     * @return {@code true} when the pixel lies inside one of the three finder-eye
+     *         squares
+     */
     private boolean isFinderPixel(BitMatrix matrix, int x, int y, int finderSize) {
         if (finderSize <= 0) {
             return false;
@@ -300,10 +423,28 @@ public final class DefaultQrCodeEncoder implements QrCodeEncoder {
                 || inSquare(x, y, left, bottom, finderSize);
     }
 
+    /**
+     * Returns whether {@code (x, y)} lies inside a square of the supplied side
+     * length whose top-left corner is at {@code (left, top)}.
+     *
+     * @param x    pixel X coordinate
+     * @param y    pixel Y coordinate
+     * @param left square left coordinate
+     * @param top  square top coordinate
+     * @param size square side length
+     * @return {@code true} when the pixel is inside the square
+     */
     private boolean inSquare(int x, int y, int left, int top, int size) {
         return x >= left && x < left + size && y >= top && y < top + size;
     }
 
+    /**
+     * Appends the SVG {@code <defs>} block describing the QR gradient when the
+     * supplied style is configured for gradient rendering.
+     *
+     * @param svg   the SVG buffer; must not be {@code null}
+     * @param style the QR style; must not be {@code null}
+     */
     private void appendGradientDefinition(StringBuilder svg, QrCodeStyle style) {
         if (style.isGradient()) {
             svg.append("<defs><linearGradient id=\"qr-gradient\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\">")
@@ -313,6 +454,12 @@ public final class DefaultQrCodeEncoder implements QrCodeEncoder {
         }
     }
 
+    /**
+     * Appends an SVG {@code <text>} element rendering a text element.
+     *
+     * @param svg     the SVG buffer; must not be {@code null}
+     * @param element the text element to render; must not be {@code null}
+     */
     private void appendSvgText(StringBuilder svg, QrCodeTextElement element) {
         svg.append("<text x=\"").append(element.getX()).append("\" y=\"")
                 .append(Math.min(element.getY() + element.getHeight(), element.getY() + element.getFontSize()))
@@ -322,6 +469,18 @@ public final class DefaultQrCodeEncoder implements QrCodeEncoder {
                 .append(escapeXml(element.getText())).append("</text>");
     }
 
+    /**
+     * Appends an SVG {@code <image>} element wrapping the supplied raster image
+     * as a base-64 PNG.
+     *
+     * @param svg    the SVG buffer; must not be {@code null}
+     * @param image  the raster image; must not be {@code null}
+     * @param x      element left coordinate
+     * @param y      element top coordinate
+     * @param width  element width in pixels
+     * @param height element height in pixels
+     * @throws IOException on PNG writing failures
+     */
     private void appendSvgImage(StringBuilder svg, BufferedImage image, int x, int y, int width, int height)
             throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -335,12 +494,32 @@ public final class DefaultQrCodeEncoder implements QrCodeEncoder {
                 .append(Base64.getEncoder().encodeToString(outputStream.toByteArray())).append("\"/>");
     }
 
+    /**
+     * Appends an SVG {@code <rect>} element with the supplied attributes.
+     *
+     * @param svg   the SVG buffer; must not be {@code null}
+     * @param x     left coordinate
+     * @param y     top coordinate
+     * @param width width in pixels
+     * @param height height in pixels
+     * @param fill  fill colour (CSS-style)
+     */
     private void appendRect(StringBuilder svg, int x, int y, int width, int height, String fill) {
         svg.append("<rect x=\"").append(x).append("\" y=\"").append(y).append("\" width=\"")
                 .append(width).append("\" height=\"").append(height).append("\" fill=\"")
                 .append(fill).append("\"/>");
     }
 
+    /**
+     * Creates the underlying {@link BitMatrix} via ZXing, applying charset,
+     * error correction level and margin hints.
+     *
+     * @param request the encode request; must not be {@code null}
+     * @param width   target width in pixels; must be positive
+     * @param height  target height in pixels; must be positive
+     * @return the generated bit matrix
+     * @throws WriterException if ZXing fails to produce the bit matrix
+     */
     private BitMatrix createMatrix(QrCodeRequest request, int width, int height) throws WriterException {
         Map<EncodeHintType, Object> hints = new EnumMap<EncodeHintType, Object>(EncodeHintType.class);
         hints.put(EncodeHintType.CHARACTER_SET, request.getCharset().name());
@@ -349,6 +528,14 @@ public final class DefaultQrCodeEncoder implements QrCodeEncoder {
         return writer.encode(request.getContent(), BarcodeFormat.QR_CODE, width, height, hints);
     }
 
+    /**
+     * Validates that the request's output dimensions respect the configured
+     * safety caps.
+     *
+     * @param request the encode request; must not be {@code null}
+     * @throws QrCodeException when either dimension or the pixel count exceed
+     *         the configured limits
+     */
     private void validateDimensions(QrCodeRequest request) {
         int outputWidth = Objects.isNull(request.getFrame()) ? request.getWidth() : request.getFrame().getWidth();
         int outputHeight = Objects.isNull(request.getFrame()) ? request.getHeight() : request.getFrame().getHeight();
@@ -359,6 +546,15 @@ public final class DefaultQrCodeEncoder implements QrCodeEncoder {
         }
     }
 
+    /**
+     * Decodes the freshly rendered output and verifies that the decoded text
+     * matches the original request content.
+     *
+     * @param request the encode request; must not be {@code null}
+     * @param output  the rendered output; must not be {@code null}
+     * @throws QrCodeException carrying {@link QrCodeErrorCode#QRCODE_SELF_CHECK_FAILED}
+     *         when the round-trip check fails
+     */
     private void selfCheck(QrCodeRequest request, QrCodeOutput output) {
         try {
             String decoded = new DefaultQrCodeDecoder().decodeFirst(QrCodeDecodeRequest.from(output.getBytes()).build())
@@ -376,16 +572,34 @@ public final class DefaultQrCodeEncoder implements QrCodeEncoder {
         }
     }
 
+    /**
+     * Applies the encoder's standard high-quality rendering hints to the
+     * supplied graphics context.
+     *
+     * @param graphics the graphics context to configure; must not be {@code null}
+     */
     private void configureGraphics(Graphics2D graphics) {
         graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
         graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
     }
 
+    /**
+     * Renders an {@link Color} as a CSS-style hexadecimal string.
+     *
+     * @param color the colour to format; must not be {@code null}
+     * @return a string of the form {@code #rrggbb}
+     */
     private String color(Color color) {
         return String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
     }
 
+    /**
+     * Escapes the five XML special characters in the supplied value.
+     *
+     * @param value the value to escape; must not be {@code null}
+     * @return the XML-safe value
+     */
     private String escapeXml(String value) {
         return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
                 .replace("\"", "&quot;").replace("'", "&apos;");

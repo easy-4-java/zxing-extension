@@ -19,37 +19,53 @@ import com.google.zxing.source.BufferedImageLuminanceSource;
 import com.google.zxing.source.MatrixToImageWriter;
 
 /**
- * Aztec 码静态门面。
+ * Static facade providing encode / decode entry points for the Aztec 2-D barcode
+ * symbology, built on top of ZXing's {@link MultiFormatWriter} and
+ * {@link MultiFormatReader}.
  *
- * <p>提供生成与解码的快捷入口，使用 ZXing 的 {@link MultiFormatWriter} /
- * {@link MultiFormatReader}。纠错参数 {@code errorCorrectionPercent} 取值 1-100，
- * 与 QR Code 的 L/M/Q/H 语义不同。线程安全：内部仅调用 ZXing 的无状态 API。
+ * <p>Unlike QR Codes, Aztec codes expose a single continuous
+ * {@code errorCorrectionPercent} integer (1-100) instead of the L / M / Q / H
+ * discrete levels. The facade translates that single value into ZXing's
+ * {@link EncodeHintType#ERROR_CORRECTION} hint verbatim and lets ZXing drive
+ * the actual encoding / decoding.</p>
+ *
+ * <p>Thread safety: this class only delegates to ZXing's stateless APIs and
+ * keeps a single static {@link MultiFormatWriter}; concurrent calls are safe.</p>
+ *
+ * @author [@Loong Wan](https://github.com/loong10k)
+ * @since 3.0.0
+ * @see AztecCodeRequest
+ * @see com.google.zxing.MultiFormatWriter
  */
 public final class AztecCodes {
 
+    /**
+     * Shared, stateless ZXing writer used for every encode call.
+     */
     private static final MultiFormatWriter WRITER = new MultiFormatWriter();
 
     private AztecCodes() {
     }
 
     /**
-     * 使用 {@link AztecCodeRequest} 默认值生成 Aztec 码 PNG。
+     * Encodes {@code content} as an Aztec barcode PNG using a default
+     * {@link AztecCodeRequest}.
      *
-     * @param content 要编码的内容；不能为 {@code null} 或空白
-     * @return 编码后的 PNG
-     * @throws com.google.zxing.exception.CodeException 当 ZXing 编码失败时抛出
+     * @param content the payload to encode; must not be {@code null} or blank
+     * @return the encoded PNG wrapped in a {@link CodeOutput}
+     * @throws com.google.zxing.exception.CodeException if ZXing fails to encode
      */
     public static CodeOutput encode(String content) {
         return encode(AztecCodeRequest.builder(content).build());
     }
 
     /**
-     * 根据显式请求生成 Aztec 码 PNG。会在输入区四周留出 {@code request.getMargin()}
-     * 像素的 quiet zone。
+     * Encodes an explicit {@link AztecCodeRequest} as an Aztec barcode PNG,
+     * reserving a {@code margin} pixel quiet zone around the module area.
      *
-     * @param request 编码请求；不能为 {@code null}
-     * @return 编码后的 PNG
-     * @throws com.google.zxing.exception.CodeException 当 ZXing 编码失败时抛出
+     * @param request the encode request; must not be {@code null}
+     * @return the encoded PNG wrapped in a {@link CodeOutput}
+     * @throws com.google.zxing.exception.CodeException if ZXing fails to encode
      */
     public static CodeOutput encode(AztecCodeRequest request) {
         Objects.requireNonNull(request, "request must not be null");
@@ -69,22 +85,23 @@ public final class AztecCodes {
     }
 
     /**
-     * 从编码图像字节中解析 Aztec 码。
+     * Decodes an Aztec code from a raw encoded image byte array (PNG, JPEG, etc.).
      *
-     * @param bytes  PNG/JPEG 等编码图像字节；不能为 {@code null}
-     * @return 解码结果
-     * @throws com.google.zxing.exception.CodeException 当 IO 失败或未发现 Aztec 码时抛出
+     * @param bytes encoded image bytes; must not be {@code null}
+     * @return the decode result
+     * @throws com.google.zxing.exception.CodeException if the image cannot be read
+     *         or no Aztec code is found
      */
     public static CodeResult decode(byte[] bytes) {
         return decode(CodeImageSupport.read(bytes));
     }
 
     /**
-     * 从 {@link BufferedImage} 中解析 Aztec 码。
+     * Decodes an Aztec code from a {@link BufferedImage}.
      *
-     * @param image 图像；不能为 {@code null}
-     * @return 解码结果
-     * @throws com.google.zxing.exception.CodeException 当未发现 Aztec 码时抛出
+     * @param image the raster image; must not be {@code null}
+     * @return the decode result
+     * @throws com.google.zxing.exception.CodeException if no Aztec code is found
      */
     public static CodeResult decode(BufferedImage image) {
         Objects.requireNonNull(image, "image must not be null");
@@ -103,33 +120,37 @@ public final class AztecCodes {
     }
 
     /**
-     * 从图像文件中解析 Aztec 码。
+     * Decodes an Aztec code from an image file on disk.
      *
-     * @param file 图像文件；不能为 {@code null}
-     * @return 解码结果
-     * @throws com.google.zxing.exception.CodeException 当 IO 失败或未发现 Aztec 码时抛出
+     * @param file the image file; must not be {@code null}
+     * @return the decode result
+     * @throws com.google.zxing.exception.CodeException on I/O failure or if no
+     *         Aztec code is found
      */
     public static CodeResult decode(File file) {
         return decode(CodeImageSupport.read(file));
     }
 
     /**
-     * 从图像 {@link Path} 中解析 Aztec 码。
+     * Decodes an Aztec code from a {@link Path} pointing at an image file.
      *
-     * @param path 图像路径；不能为 {@code null}
-     * @return 解码结果
-     * @throws com.google.zxing.exception.CodeException 当 IO 失败或未发现 Aztec 码时抛出
+     * @param path the image path; must not be {@code null}
+     * @return the decode result
+     * @throws com.google.zxing.exception.CodeException on I/O failure or if no
+     *         Aztec code is found
      */
     public static CodeResult decode(Path path) {
         return decode(CodeImageSupport.read(path));
     }
 
     /**
-     * 从字节流中解析 Aztec 码。调用方负责流的关闭，库不会主动关闭它。
+     * Decodes an Aztec code from an arbitrary {@link InputStream}. The library
+     * does <strong>not</strong> close the stream; the caller retains ownership.
      *
-     * @param inputStream 字节流；不能为 {@code null}
-     * @return 解码结果
-     * @throws com.google.zxing.exception.CodeException 当 IO 失败或未发现 Aztec 码时抛出
+     * @param inputStream the byte stream; must not be {@code null}
+     * @return the decode result
+     * @throws com.google.zxing.exception.CodeException on I/O failure or if no
+     *         Aztec code is found
      */
     public static CodeResult decode(InputStream inputStream) {
         return decode(CodeImageSupport.read(inputStream));

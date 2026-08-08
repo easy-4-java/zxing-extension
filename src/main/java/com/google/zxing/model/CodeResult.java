@@ -11,14 +11,24 @@ import com.google.zxing.ResultMetadataType;
 import com.google.zxing.ResultPoint;
 
 /**
- * 不可变的解码结果抽象，是 QR / Aztec / BarCode 共享的结果类型。
+ * Immutable decode result shared across QR, Aztec and one-dimensional
+ * barcode paths.
  *
- * <p>暴露：
+ * <p>Exposes:</p>
  * <ul>
- *     <li>{@link #getText()}：原始文本；</li>
- *     <li>{@link #getFormat()} 与 {@link #getBarcodeFormat()}：格式（同语义，两种命名）。</li>
- *     <li>{@link #getRawBytes()}、{@link #getPoints()} 与 {@link #getMetadata()}：原始字节、定位点、元数据（均为防御性拷贝）。</li>
+ *     <li>{@link #getText()} &mdash; the decoded text;</li>
+ *     <li>{@link #getFormat()} and {@link #getBarcodeFormat()} &mdash; the
+ *         barcode format (semantically identical; two naming conventions).</li>
+ *     <li>{@link #getRawBytes()}, {@link #getPoints()} and
+ *         {@link #getMetadata()} &mdash; raw bytes, result points and
+ *         metadata (all defensive copies).</li>
  * </ul>
+ *
+ * @author [@Loong Wan](https://github.com/loong10k)
+ * @since 3.0.0
+ * @see QrCodeDecodeResult
+ * @see com.google.zxing.AztecCodes
+ * @see com.google.zxing.BarCodes
  */
 public class CodeResult {
 
@@ -29,13 +39,15 @@ public class CodeResult {
     private final Map<ResultMetadataType, Object> metadata;
 
     /**
-     * 构造解码结果。
+     * Constructs a decode result.
      *
-     * @param text     解码文本，可为 {@code null}
-     * @param format   格式；不能为 {@code null}
-     * @param rawBytes 原始字节，可为 {@code null}
-     * @param points   定位点数组，可为 {@code null}（{@code null} → 视为空数组）
-     * @param metadata 元数据映射，可为 {@code null}（{@code null} → 视为空映射）
+     * @param text     the decoded text; may be {@code null}
+     * @param format   the barcode format; must not be {@code null}
+     * @param rawBytes the raw bytes; may be {@code null}
+     * @param points   the result point array; may be {@code null} (treated as
+     *                 empty array)
+     * @param metadata the metadata map; may be {@code null} (treated as empty
+     *                 map)
      */
     public CodeResult(String text, BarcodeFormat format, byte[] rawBytes, ResultPoint[] points,
             Map<ResultMetadataType, Object> metadata) {
@@ -51,10 +63,10 @@ public class CodeResult {
     }
 
     /**
-     * 从 ZXing 原生 {@link Result} 转换为当前项目结果。
+     * Converts a ZXing native {@link Result} into this project's result type.
      *
-     * @param result ZXing 结果；不能为 {@code null}
-     * @return 不可变结果
+     * @param result the ZXing result; must not be {@code null}
+     * @return an immutable {@link CodeResult}
      */
     public static CodeResult from(Result result) {
         Objects.requireNonNull(result, "result must not be null");
@@ -63,44 +75,55 @@ public class CodeResult {
     }
 
     /**
-     * @return 解码得到的文本
+     * Returns the decoded text.
+     *
+     * @return the decoded text, or {@code null} if not available
      */
     public String getText() {
         return text;
     }
 
     /**
-     * @return ZXing {@link BarcodeFormat}
+     * Returns the ZXing {@link BarcodeFormat}.
+     *
+     * @return the barcode format
      */
     public BarcodeFormat getFormat() {
         return format;
     }
 
     /**
-     * 与 {@link #getFormat()} 等价；为了与 ZXing 原生 {@link Result#getBarcodeFormat()} 命名保持一致。
+     * Equivalent to {@link #getFormat()}; retained for naming consistency
+     * with ZXing's native {@link Result#getBarcodeFormat()}.
      *
-     * @return ZXing {@link BarcodeFormat}
+     * @return the barcode format
      */
     public BarcodeFormat getBarcodeFormat() {
         return format;
     }
 
     /**
-     * @return 原始字节，未设置时为 {@code null}
+     * Returns a defensive copy of the raw bytes.
+     *
+     * @return the raw bytes, or {@code null} if not available
      */
     public byte[] getRawBytes() {
         return Objects.isNull(rawBytes) ? null : rawBytes.clone();
     }
 
     /**
-     * @return 定位点的防御性拷贝
+     * Returns a defensive copy of the result points.
+     *
+     * @return the result points (never {@code null})
      */
     public ResultPoint[] getPoints() {
         return points.clone();
     }
 
     /**
-     * @return 不可变元数据视图
+     * Returns an unmodifiable view of the result metadata.
+     *
+     * @return the metadata map (never {@code null})
      */
     public Map<ResultMetadataType, Object> getMetadata() {
         return metadata;

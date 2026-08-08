@@ -18,26 +18,44 @@ import com.google.zxing.model.CodeOutput;
 import com.google.zxing.source.MatrixToImageWriter;
 
 /**
- * 非 QR 路径（AztEc / BarCode）共享的图像输入/输出支持类，包私有。
+ * Shared image input / output helper for the non-QR code paths (Aztec and
+ * one-dimensional barcodes).
  *
- * <p>该类的所有静态方法均为包私有，所有 IO 异常都会被包装为 {@link CodeException}；
- * 调用方传入的 {@link InputStream} 不会被关闭（仅 {@link #read(Path)} 与
- * {@link #toPng(BitMatrix)} 创建自己的内部流）。
+ * <p>The class is package-private and all of its methods are static. Every
+ * {@link IOException} is wrapped as a {@link CodeException} so that the public
+ * facades ({@link AztecCodes}, {@link BarCodes}) only need to deal with a
+ * single exception type.</p>
+ *
+ * <p>The caller-supplied {@link InputStream} passed to {@link #read(InputStream)}
+ * is <strong>not</strong> closed by this class &mdash; only the internal
+ * streams opened by {@link #read(Path)} and {@link #toPng(BitMatrix)} are
+ * closed automatically via try-with-resources.</p>
+ *
+ * @author [@Loong Wan](https://github.com/loong10k)
+ * @since 3.0.0
+ * @see CodeException
  */
 final class CodeImageSupport {
 
+    /**
+     * ImageIO format name used for PNG rendering.
+     */
     private static final String PNG_FORMAT = "png";
+
+    /**
+     * Standard MIME type associated with PNG output.
+     */
     private static final String PNG_MIME_TYPE = "image/png";
 
     private CodeImageSupport() {
     }
 
     /**
-     * 将 {@link BitMatrix} 渲染为 PNG 格式的 {@link CodeOutput}。
+     * Renders a {@link BitMatrix} as a PNG-encoded {@link CodeOutput}.
      *
-     * @param matrix ZXing 生成的位图矩阵；不能为 {@code null}
-     * @return 编码后的 PNG 输出
-     * @throws CodeException 当没有可用的 PNG 写入器或渲染失败时抛出
+     * @param matrix the bit matrix produced by ZXing; must not be {@code null}
+     * @return a PNG-encoded output containing the rendered image
+     * @throws CodeException if no PNG writer is registered or rendering fails
      */
     static CodeOutput toPng(BitMatrix matrix) {
         BufferedImage image = MatrixToImageWriter.toBufferedImage(matrix);
@@ -52,11 +70,11 @@ final class CodeImageSupport {
     }
 
     /**
-     * 从字节数组读取 {@link BufferedImage}。
+     * Reads a {@link BufferedImage} from a raw byte array (PNG, JPEG, etc.).
      *
-     * @param bytes 编码字节；不能为 {@code null}
-     * @return 解码后的图像
-     * @throws CodeException 当输入不是合法的栅格图像时抛出
+     * @param bytes the encoded image bytes; must not be {@code null}
+     * @return the decoded raster image
+     * @throws CodeException if the bytes do not represent a supported raster image
      */
     static BufferedImage read(byte[] bytes) {
         Objects.requireNonNull(bytes, "bytes must not be null");
@@ -64,11 +82,11 @@ final class CodeImageSupport {
     }
 
     /**
-     * 从 {@link File} 读取 {@link BufferedImage}。
+     * Reads a {@link BufferedImage} from a {@link File}.
      *
-     * @param file 文件；不能为 {@code null}
-     * @return 解码后的图像
-     * @throws CodeException 当 IO 失败或非合法图像时抛出
+     * @param file the image file; must not be {@code null}
+     * @return the decoded raster image
+     * @throws CodeException on I/O failure or if the file is not a supported image
      */
     static BufferedImage read(File file) {
         Objects.requireNonNull(file, "file must not be null");
@@ -76,11 +94,12 @@ final class CodeImageSupport {
     }
 
     /**
-     * 从 {@link Path} 读取 {@link BufferedImage}。库内部会打开并关闭流。
+     * Reads a {@link BufferedImage} from a {@link Path}; the library opens and
+     * closes its own stream internally.
      *
-     * @param path 文件路径；不能为 {@code null}
-     * @return 解码后的图像
-     * @throws CodeException 当 IO 失败或非合法图像时抛出
+     * @param path the file path; must not be {@code null}
+     * @return the decoded raster image
+     * @throws CodeException on I/O failure or if the file is not a supported image
      */
     static BufferedImage read(Path path) {
         Objects.requireNonNull(path, "path must not be null");
@@ -92,11 +111,13 @@ final class CodeImageSupport {
     }
 
     /**
-     * 从调用方持有的 {@link InputStream} 读取 {@link BufferedImage}。库不会关闭该流。
+     * Reads a {@link BufferedImage} from a caller-owned {@link InputStream}.
+     * The stream is <strong>not</strong> closed by this method.
      *
-     * @param inputStream 字节流；不能为 {@code null}
-     * @return 解码后的图像
-     * @throws CodeException 当 IO 失败或非合法图像时抛出
+     * @param inputStream the byte stream; must not be {@code null}
+     * @return the decoded raster image
+     * @throws CodeException on I/O failure or if the stream does not produce a
+     *         supported raster image
      */
     static BufferedImage read(InputStream inputStream) {
         Objects.requireNonNull(inputStream, "inputStream must not be null");

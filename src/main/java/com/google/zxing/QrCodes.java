@@ -13,56 +13,75 @@ import com.google.zxing.model.QrCodeRequest;
 import com.google.zxing.model.QrCodeStyle;
 
 /**
- * QR Code 静态门面。
+ * Static facade exposing the default {@link QrCodeEncoder} and
+ * {@link QrCodeDecoder} implementations, plus a handful of convenience
+ * shortcuts for common scenarios (single-colour, colourful, logo overlay).
  *
- * <p>对外暴露 {@link QrCodeEncoder} 与 {@link QrCodeDecoder} 的默认实现，并提供若干
- * 快捷方法（如 {@link #encode(String)}、{@link #colorful(String)}、{@link #withLogo(String, BufferedImage)}）
- * 用于常见场景。线程安全：内部使用单例的 {@link DefaultQrCodeEncoder} /
- * {@link DefaultQrCodeDecoder}。该门面不进行远程 URL 加载，不持有任何状态。
+ * <p>Thread safety: the facade shares a single
+ * {@link DefaultQrCodeEncoder} and {@link DefaultQrCodeDecoder} instance; both
+ * delegate to ZXing's stateless APIs and hold no mutable state, so concurrent
+ * use is safe.</p>
+ *
+ * <p>The facade does not perform any network I/O, does not load remote URLs,
+ * and never holds open resources between calls.</p>
+ *
+ * @author [@Loong Wan](https://github.com/loong10k)
+ * @since 3.0.0
+ * @see QrCodeEncoder
+ * @see QrCodeDecoder
  */
 public final class QrCodes {
 
+    /**
+     * Shared default encoder instance.
+     */
     private static final QrCodeEncoder ENCODER = new DefaultQrCodeEncoder();
+
+    /**
+     * Shared default decoder instance.
+     */
     private static final QrCodeDecoder DECODER = new DefaultQrCodeDecoder();
 
     private QrCodes() {
     }
 
     /**
-     * 返回默认 QR 编码器（{@link DefaultQrCodeEncoder} 单例）。
+     * Returns the shared default {@link QrCodeEncoder}.
      *
-     * @return 不变量共享的默认编码器
+     * @return a process-wide singleton {@link DefaultQrCodeEncoder}
      */
     public static QrCodeEncoder encoder() {
         return ENCODER;
     }
 
     /**
-     * 返回默认 QR 解码器（{@link DefaultQrCodeDecoder} 单例）。
+     * Returns the shared default {@link QrCodeDecoder}.
      *
-     * @return 不变量共享的默认解码器
+     * @return a process-wide singleton {@link DefaultQrCodeDecoder}
      */
     public static QrCodeDecoder decoder() {
         return DECODER;
     }
 
     /**
-     * 生成单色 PNG 二维码，使用 {@link QrCodeRequest} 的默认值。
+     * Generates a monochrome PNG QR Code using {@link QrCodeRequest}'s default
+     * parameters.
      *
-     * @param content 要编码的内容；不能为 {@code null} 或空白
-     * @return 编码后的 PNG 二维码
-     * @throws com.google.zxing.exception.QrCodeException 编码失败时抛出
+     * @param content the payload to encode; must not be {@code null} or blank
+     * @return the encoded PNG QR Code
+     * @throws com.google.zxing.exception.QrCodeException when encoding fails
      */
     public static QrCodeOutput encode(String content) {
         return ENCODER.encode(QrCodeRequest.builder(content).build());
     }
 
     /**
-     * 生成彩色渐变 PNG 二维码，使用 {@link QrCodeStyle#colorful()} 默认风格。
+     * Generates a colourful gradient PNG QR Code using the
+     * {@link QrCodeStyle#colorful()} preset style.
      *
-     * @param content 要编码的内容；不能为 {@code null} 或空白
-     * @return 编码后的 PNG 二维码
-     * @throws com.google.zxing.exception.QrCodeException 编码失败时抛出
+     * @param content the payload to encode; must not be {@code null} or blank
+     * @return the encoded PNG QR Code
+     * @throws com.google.zxing.exception.QrCodeException when encoding fails
      */
     public static QrCodeOutput colorful(String content) {
         return ENCODER.encode(QrCodeRequest.builder(content)
@@ -71,12 +90,14 @@ public final class QrCodes {
     }
 
     /**
-     * 生成 PNG 二维码并将给定图片居中放置为 Logo；自动将纠错级别上调到 {@code H}。
+     * Generates a PNG QR Code with {@code logo} drawn centred over the QR
+     * region; the error correction level is automatically raised to
+     * {@code H} so the logo can occlude up to ~30&nbsp;% of the modules.
      *
-     * @param content 要编码的内容；不能为 {@code null} 或空白
-     * @param logo    居中绘制的 Logo 图片；不能为 {@code null}
-     * @return 编码后的 PNG 二维码
-     * @throws com.google.zxing.exception.QrCodeException 编码失败时抛出
+     * @param content the payload to encode; must not be {@code null} or blank
+     * @param logo    the centred logo image; must not be {@code null}
+     * @return the encoded PNG QR Code
+     * @throws com.google.zxing.exception.QrCodeException when encoding fails
      */
     public static QrCodeOutput withLogo(String content, BufferedImage logo) {
         return ENCODER.encode(QrCodeRequest.builder(content)
@@ -85,55 +106,64 @@ public final class QrCodes {
     }
 
     /**
-     * 从编码图像字节中解析第一条 QR 记录。
+     * Decodes the first QR Code found in a raw encoded image byte array
+     * (PNG, JPEG, etc.).
      *
-     * @param bytes  PNG/JPEG 等编码图像字节；不能为 {@code null}
-     * @return 解析得到的首条记录
-     * @throws com.google.zxing.exception.QrCodeException 未找到或解码失败时抛出
+     * @param bytes encoded image bytes; must not be {@code null}
+     * @return the first decoded result
+     * @throws com.google.zxing.exception.QrCodeException when no QR code is
+     *         found or decoding fails
      */
     public static QrCodeDecodeResult decode(byte[] bytes) {
         return DECODER.decodeFirst(QrCodeDecodeRequest.from(bytes).build());
     }
 
     /**
-     * 从 {@link BufferedImage} 中解析第一条 QR 记录。
+     * Decodes the first QR Code from a {@link BufferedImage}.
      *
-     * @param image 图像；不能为 {@code null}
-     * @return 解析得到的首条记录
-     * @throws com.google.zxing.exception.QrCodeException 未找到或解码失败时抛出
+     * @param image the raster image; must not be {@code null}
+     * @return the first decoded result
+     * @throws com.google.zxing.exception.QrCodeException when no QR code is
+     *         found or decoding fails
      */
     public static QrCodeDecodeResult decode(BufferedImage image) {
         return DECODER.decodeFirst(QrCodeDecodeRequest.from(image).build());
     }
 
     /**
-     * 从图像文件中解析第一条 QR 记录。
+     * Decodes the first QR Code from an image file on disk.
      *
-     * @param file PNG/JPEG 等图像文件；不能为 {@code null}
-     * @return 解析得到的首条记录
-     * @throws com.google.zxing.exception.QrCodeException 未找到或解码失败时抛出
+     * @param file the image file; must not be {@code null}
+     * @return the first decoded result
+     * @throws com.google.zxing.exception.QrCodeException when no QR code is
+     *         found, on I/O failure, or when decoding fails
      */
     public static QrCodeDecodeResult decode(File file) {
         return DECODER.decodeFirst(QrCodeDecodeRequest.from(file).build());
     }
 
     /**
-     * 从 {@link Path} 指向的图像文件中解析第一条 QR 记录。
+     * Decodes the first QR Code from the image file pointed at by the supplied
+     * {@link Path}.
      *
-     * @param path 图像路径；不能为 {@code null}
-     * @return 解析得到的首条记录
-     * @throws com.google.zxing.exception.QrCodeException 未找到、IO 失败或解码失败时抛出
+     * @param path the image path; must not be {@code null}
+     * @return the first decoded result
+     * @throws com.google.zxing.exception.QrCodeException when no QR code is
+     *         found, on I/O failure, or when decoding fails
      */
     public static QrCodeDecodeResult decode(Path path) {
         return DECODER.decodeFirst(QrCodeDecodeRequest.from(path).build());
     }
 
     /**
-     * 从字节流中解析第一条 QR 记录。调用方负责流的关闭，库不会主动关闭它。
+     * Decodes the first QR Code from an arbitrary {@link InputStream}. The
+     * library does <strong>not</strong> close the stream; the caller retains
+     * ownership.
      *
-     * @param inputStream 字节流；不能为 {@code null}
-     * @return 解析得到的首条记录
-     * @throws com.google.zxing.exception.QrCodeException 未找到、IO 失败或解码失败时抛出
+     * @param inputStream the byte stream; must not be {@code null}
+     * @return the first decoded result
+     * @throws com.google.zxing.exception.QrCodeException when no QR code is
+     *         found, on I/O failure, or when decoding fails
      */
     public static QrCodeDecodeResult decode(InputStream inputStream) {
         return DECODER.decodeFirst(QrCodeDecodeRequest.from(inputStream).build());
