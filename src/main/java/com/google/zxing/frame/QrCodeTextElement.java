@@ -8,11 +8,18 @@ import org.apache.commons.lang3.StringUtils;
 import lombok.Getter;
 
 /**
- * 外套壳上绘制的文字元素。
+ * A text element drawn on a {@link QrCodeFrame} canvas.
  *
- * <p>默认值：{@code fontName = "SansSerif"}；{@code fontSize = 24}；颜色默认黑色；非粗体。
+ * <p>Defaults: {@code fontName = "SansSerif"}; {@code fontSize = 24};
+ * {@code color = Color.BLACK}; {@code bold = false}.</p>
  *
- * <p>校验：text 非空白；fontSize 大于 0；color 非空。
+ * <p>Validation: {@code text} must not be blank; {@code fontSize} must be
+ * positive; {@code color} must not be {@code null}.</p>
+ *
+ * @author [@Loong Wan](https://github.com/loong10k)
+ * @since 3.0.0
+ * @see QrCodeFrameElement
+ * @see QrCodeFrame
  */
 @Getter
 public final class QrCodeTextElement implements QrCodeFrameElement {
@@ -45,15 +52,17 @@ public final class QrCodeTextElement implements QrCodeFrameElement {
     }
 
     /**
-     * @param text 文字内容；不能为 {@code null} 或空白
-     * @return 新 Builder
+     * Creates a new {@link Builder} for a text element.
+     *
+     * @param text the text content; must not be {@code null} or blank
+     * @return a new builder instance
      */
     public static Builder builder(String text) {
         return new Builder(text);
     }
 
     /**
-     * 文字元素链式构造器。
+     * Fluent builder for {@link QrCodeTextElement} instances.
      */
     public static final class Builder {
 
@@ -73,11 +82,13 @@ public final class QrCodeTextElement implements QrCodeFrameElement {
         }
 
         /**
-         * @param x      左上角 X
-         * @param y      左上角 Y
-         * @param width  像素宽度
-         * @param height 像素高度
-         * @return 当前 builder
+         * Sets the bounding rectangle for this text element.
+         *
+         * @param x      the left X coordinate in pixels
+         * @param y      the top Y coordinate in pixels
+         * @param width  the width in pixels
+         * @param height the height in pixels
+         * @return this builder
          */
         public Builder bounds(int x, int y, int width, int height) {
             this.x = x;
@@ -88,8 +99,10 @@ public final class QrCodeTextElement implements QrCodeFrameElement {
         }
 
         /**
-         * @param zIndex zIndex；越大越在上层
-         * @return 当前 builder
+         * Sets the z-order index; higher values render on top of lower values.
+         *
+         * @param zIndex the z-order index
+         * @return this builder
          */
         public Builder zIndex(int zIndex) {
             this.zIndex = zIndex;
@@ -97,10 +110,12 @@ public final class QrCodeTextElement implements QrCodeFrameElement {
         }
 
         /**
-         * @param fontName 字体名称
-         * @param fontSize 像素大小
-         * @param bold     是否粗体
-         * @return 当前 builder
+         * Sets the font properties for this text element.
+         *
+         * @param fontName the font family name; blank values fall back to {@code "SansSerif"}
+         * @param fontSize the font size in pixels; must be positive
+         * @param bold     whether to render in bold
+         * @return this builder
          */
         public Builder font(String fontName, int fontSize, boolean bold) {
             this.fontName = fontName;
@@ -110,8 +125,10 @@ public final class QrCodeTextElement implements QrCodeFrameElement {
         }
 
         /**
-         * @param color 颜色；不能为 {@code null}
-         * @return 当前 builder
+         * Sets the text colour.
+         *
+         * @param color the text colour; must not be {@code null}
+         * @return this builder
          */
         public Builder color(Color color) {
             this.color = color;
@@ -119,7 +136,9 @@ public final class QrCodeTextElement implements QrCodeFrameElement {
         }
 
         /**
-         * @return 不可变文字元素
+         * Validates and builds an immutable {@link QrCodeTextElement}.
+         *
+         * @return an immutable text element
          */
         public QrCodeTextElement build() {
             return new QrCodeTextElement(this);

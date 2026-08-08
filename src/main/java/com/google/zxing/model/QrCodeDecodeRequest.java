@@ -16,18 +16,26 @@ import com.google.zxing.exception.QrCodeException;
 import lombok.Getter;
 
 /**
- * 不可变的 QR Code 解码请求。
+ * Immutable QR Code decode request.
  *
- * <p>输入来源（互斥，必传其一）：
+ * <p>Input sources (mutually exclusive; at least one must be provided):</p>
  * <ul>
- *     <li>{@link #from(byte[])}；</li>
- *     <li>{@link #from(BufferedImage)}；</li>
- *     <li>{@link #from(File)} / {@link #from(Path)} —— 内部读取字节；</li>
- *     <li>{@link #from(InputStream)} —— 内部读取字节；库不会主动关闭调用方的流。</li>
+ *     <li>{@link #from(byte[])};</li>
+ *     <li>{@link #from(BufferedImage)};</li>
+ *     <li>{@link #from(File)} / {@link #from(Path)} &mdash; reads bytes
+ *         internally;</li>
+ *     <li>{@link #from(InputStream)} &mdash; reads bytes internally; the
+ *         library does <strong>not</strong> close the caller's stream.</li>
  * </ul>
  *
- * <p>默认值：charset = UTF-8；{@code tryHarder = true}；{@code alsoInverted = true}；
- * {@code maxInputBytes = 10 MiB}；{@code maxPixels = 16,777,216}。
+ * <p>Defaults: charset = UTF-8; {@code tryHarder = true};
+ * {@code alsoInverted = true}; {@code maxInputBytes = 10 MiB};
+ * {@code maxPixels = 16,777,216}.</p>
+ *
+ * @author [@Loong Wan](https://github.com/loong10k)
+ * @since 3.0.0
+ * @see QrCodeDecodeResult
+ * @see com.google.zxing.QrCodeDecoder
  */
 @Getter
 public final class QrCodeDecodeRequest {
@@ -58,32 +66,40 @@ public final class QrCodeDecodeRequest {
     }
 
     /**
-     * @return 内部字节数组的防御性拷贝
+     * Returns a defensive copy of the input bytes.
+     *
+     * @return the bytes, or {@code null} if an image source was provided
      */
     public byte[] getBytes() {
         return Objects.isNull(bytes) ? null : bytes.clone();
     }
 
     /**
-     * @param bytes 编码字节
-     * @return 新 Builder
+     * Creates a new {@link Builder} from encoded image bytes.
+     *
+     * @param bytes the encoded image bytes
+     * @return a new builder instance
      */
     public static Builder from(byte[] bytes) {
         return new Builder(bytes, null);
     }
 
     /**
-     * @param image 栅格图像
-     * @return 新 Builder
+     * Creates a new {@link Builder} from a {@link BufferedImage}.
+     *
+     * @param image the raster image
+     * @return a new builder instance
      */
     public static Builder from(BufferedImage image) {
         return new Builder(null, image);
     }
 
     /**
-     * @param file 图像文件
-     * @return 新 Builder
-     * @throws QrCodeException 当文件无法读取时抛出
+     * Creates a new {@link Builder} from an image {@link File}.
+     *
+     * @param file the image file; must not be {@code null}
+     * @return a new builder instance
+     * @throws QrCodeException if the file cannot be read
      */
     public static Builder from(File file) {
         Objects.requireNonNull(file, "file must not be null");
@@ -91,9 +107,11 @@ public final class QrCodeDecodeRequest {
     }
 
     /**
-     * @param path 图像路径
-     * @return 新 Builder
-     * @throws QrCodeException 当路径无法读取时抛出
+     * Creates a new {@link Builder} from an image {@link Path}.
+     *
+     * @param path the image path; must not be {@code null}
+     * @return a new builder instance
+     * @throws QrCodeException if the path cannot be read
      */
     public static Builder from(Path path) {
         Objects.requireNonNull(path, "path must not be null");
@@ -105,9 +123,12 @@ public final class QrCodeDecodeRequest {
     }
 
     /**
-     * @param inputStream 字节流；库不负责关闭
-     * @return 新 Builder
-     * @throws QrCodeException 当读取失败时抛出
+     * Creates a new {@link Builder} from an {@link InputStream}. The library
+     * does <strong>not</strong> close the stream.
+     *
+     * @param inputStream the byte stream; must not be {@code null}
+     * @return a new builder instance
+     * @throws QrCodeException if reading fails
      */
     public static Builder from(InputStream inputStream) {
         Objects.requireNonNull(inputStream, "inputStream must not be null");
@@ -127,7 +148,7 @@ public final class QrCodeDecodeRequest {
     }
 
     /**
-     * 请求链式构造器。
+     * Fluent builder for {@link QrCodeDecodeRequest} instances.
      */
     public static final class Builder {
 
@@ -147,8 +168,10 @@ public final class QrCodeDecodeRequest {
         }
 
         /**
-         * @param charset 字符集；不能为 {@code null}
-         * @return 当前 builder
+         * Sets the character set for decoding.
+         *
+         * @param charset the charset; must not be {@code null}
+         * @return this builder
          */
         public Builder charset(Charset charset) {
             this.charset = charset;
@@ -156,8 +179,10 @@ public final class QrCodeDecodeRequest {
         }
 
         /**
-         * @param multiple 是否启用多码解析
-         * @return 当前 builder
+         * Enables or disables multi-QR decoding.
+         *
+         * @param multiple {@code true} to enable multi-QR decoding
+         * @return this builder
          */
         public Builder multiple(boolean multiple) {
             this.multiple = multiple;
@@ -165,8 +190,10 @@ public final class QrCodeDecodeRequest {
         }
 
         /**
-         * @param tryHarder 是否启用 {@code TRY_HARDER} hint
-         * @return 当前 builder
+         * Enables or disables the {@code TRY_HARDER} decode hint.
+         *
+         * @param tryHarder {@code true} to enable
+         * @return this builder
          */
         public Builder tryHarder(boolean tryHarder) {
             this.tryHarder = tryHarder;
@@ -174,8 +201,10 @@ public final class QrCodeDecodeRequest {
         }
 
         /**
-         * @param alsoInverted 是否启用 {@code ALSO_INVERTED} hint
-         * @return 当前 builder
+         * Enables or disables the {@code ALSO_INVERTED} decode hint.
+         *
+         * @param alsoInverted {@code true} to enable
+         * @return this builder
          */
         public Builder alsoInverted(boolean alsoInverted) {
             this.alsoInverted = alsoInverted;
@@ -183,8 +212,10 @@ public final class QrCodeDecodeRequest {
         }
 
         /**
-         * @param pureBarcode 是否启用 {@code PURE_BARCODE} hint
-         * @return 当前 builder
+         * Enables or disables the {@code PURE_BARCODE} decode hint.
+         *
+         * @param pureBarcode {@code true} to enable
+         * @return this builder
          */
         public Builder pureBarcode(boolean pureBarcode) {
             this.pureBarcode = pureBarcode;
@@ -192,8 +223,10 @@ public final class QrCodeDecodeRequest {
         }
 
         /**
-         * @param maxInputBytes 输入字节上限；必须为正
-         * @return 当前 builder
+         * Sets the maximum input byte size.
+         *
+         * @param maxInputBytes the byte limit; must be positive
+         * @return this builder
          */
         public Builder maxInputBytes(int maxInputBytes) {
             this.maxInputBytes = maxInputBytes;
@@ -201,8 +234,10 @@ public final class QrCodeDecodeRequest {
         }
 
         /**
-         * @param maxPixels 解码图像像素上限；必须为正
-         * @return 当前 builder
+         * Sets the maximum pixel count for the decoded image.
+         *
+         * @param maxPixels the pixel limit; must be positive
+         * @return this builder
          */
         public Builder maxPixels(long maxPixels) {
             this.maxPixels = maxPixels;
@@ -210,7 +245,10 @@ public final class QrCodeDecodeRequest {
         }
 
         /**
-         * @return 不可变请求
+         * Validates and builds an immutable {@link QrCodeDecodeRequest}.
+         *
+         * @return an immutable request
+         * @throws IllegalArgumentException if decode limits are non-positive
          */
         public QrCodeDecodeRequest build() {
             if (maxInputBytes <= 0 || maxPixels <= 0) {

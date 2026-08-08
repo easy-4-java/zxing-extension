@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2018-present, easy-4-java (https://github.com/easy-4-java).
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.google.zxing.exception;
 
 import java.util.Objects;
@@ -5,23 +20,32 @@ import java.util.Objects;
 import lombok.Getter;
 
 /**
- * 运行期异常，携带稳定的 {@link QrCodeErrorCode}，用于 QR Code 引擎的所有错误路径。
+ * Unchecked exception that carries a stable {@link QrCodeErrorCode} for every
+ * failure path exposed by the QR Code engine.
  *
- * <p>{@link QrCodeErrorCode} 与调用方契约绑定，不依赖异常消息内容，因此即使本地化文案变更也不会破坏 API。
+ * <p>{@link QrCodeErrorCode} is part of the public contract; the exception
+ * message is purely informational and may be localised without breaking
+ * consumers.</p>
+ *
+ * @author [@Loong Wan](https://github.com/loong10k)
+ * @since 3.0.0
+ * @see QrCodeErrorCode
  */
 @Getter
 public class QrCodeException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
-    /** 稳定错误码；不为 {@code null}。 */
+    /**
+     * Stable error code; never {@code null}.
+     */
     private final QrCodeErrorCode errorCode;
 
     /**
-     * 创建仅含消息的异常。
+     * Creates a new exception with the given error code and message.
      *
-     * @param errorCode 不能为 {@code null}
-     * @param message   人类可读的错误描述
+     * @param errorCode the stable error code; must not be {@code null}
+     * @param message   a human-readable description of the failure
      */
     public QrCodeException(QrCodeErrorCode errorCode, String message) {
         super(message);
@@ -29,11 +53,11 @@ public class QrCodeException extends RuntimeException {
     }
 
     /**
-     * 创建带原因的异常。
+     * Creates a new exception that wraps a lower-level cause.
      *
-     * @param errorCode 不能为 {@code null}
-     * @param message   人类可读的错误描述
-     * @param cause     底层原因；通常为 ZXing 上游异常
+     * @param errorCode the stable error code; must not be {@code null}
+     * @param message   a human-readable description of the failure
+     * @param cause     the underlying cause; typically a ZXing exception
      */
     public QrCodeException(QrCodeErrorCode errorCode, String message, Throwable cause) {
         super(message, cause);

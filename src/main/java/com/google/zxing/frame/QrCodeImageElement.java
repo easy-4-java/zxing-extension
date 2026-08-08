@@ -6,9 +6,15 @@ import java.util.Objects;
 import lombok.Getter;
 
 /**
- * 外套壳上绘制的任意图片元素。
+ * An arbitrary image element drawn on a {@link QrCodeFrame} canvas.
  *
- * <p>校验：image 非空；width/height 大于 0。
+ * <p>Validation: the {@code image} must not be {@code null};
+ * {@code width} and {@code height} must be strictly positive.</p>
+ *
+ * @author [@Loong Wan](https://github.com/loong10k)
+ * @since 3.0.0
+ * @see QrCodeFrameElement
+ * @see QrCodeFrame
  */
 @Getter
 public final class QrCodeImageElement implements QrCodeFrameElement {
@@ -33,15 +39,17 @@ public final class QrCodeImageElement implements QrCodeFrameElement {
     }
 
     /**
-     * @param image 任意 BufferedImage；不能为 {@code null}
-     * @return 新 Builder
+     * Creates a new {@link Builder} for an image element.
+     *
+     * @param image the {@link BufferedImage} to render; must not be {@code null}
+     * @return a new builder instance
      */
     public static Builder builder(BufferedImage image) {
         return new Builder(image);
     }
 
     /**
-     * 图片元素链式构造器。
+     * Fluent builder for {@link QrCodeImageElement} instances.
      */
     public static final class Builder {
 
@@ -57,11 +65,13 @@ public final class QrCodeImageElement implements QrCodeFrameElement {
         }
 
         /**
-         * @param x      左上角 X
-         * @param y      左上角 Y
-         * @param width  像素宽度
-         * @param height 像素高度
-         * @return 当前 builder
+         * Sets the bounding rectangle for this image element.
+         *
+         * @param x      the left X coordinate in pixels
+         * @param y      the top Y coordinate in pixels
+         * @param width  the width in pixels; must be positive
+         * @param height the height in pixels; must be positive
+         * @return this builder
          */
         public Builder bounds(int x, int y, int width, int height) {
             this.x = x;
@@ -72,8 +82,10 @@ public final class QrCodeImageElement implements QrCodeFrameElement {
         }
 
         /**
-         * @param zIndex zIndex；越大越在上层
-         * @return 当前 builder
+         * Sets the z-order index; higher values render on top of lower values.
+         *
+         * @param zIndex the z-order index
+         * @return this builder
          */
         public Builder zIndex(int zIndex) {
             this.zIndex = zIndex;
@@ -81,7 +93,9 @@ public final class QrCodeImageElement implements QrCodeFrameElement {
         }
 
         /**
-         * @return 不可变图片元素
+         * Validates and builds an immutable {@link QrCodeImageElement}.
+         *
+         * @return an immutable image element
          */
         public QrCodeImageElement build() {
             return new QrCodeImageElement(this);

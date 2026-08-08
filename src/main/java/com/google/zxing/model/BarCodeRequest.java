@@ -11,24 +11,33 @@ import com.google.zxing.BarcodeFormat;
 import lombok.Getter;
 
 /**
- * 不可变的一维条形码编码请求。
+ * Immutable one-dimensional barcode encoding request.
  *
- * <p>默认值：
+ * <p>Defaults:</p>
  * <ul>
- *     <li>{@link #DEFAULT_WIDTH} × {@link #DEFAULT_HEIGHT}（300 × 100）；</li>
- *     <li>margin = 10；</li>
- *     <li>charset = UTF-8。</li>
+ *     <li>Dimensions: {@link #DEFAULT_WIDTH} &times; {@link #DEFAULT_HEIGHT}
+ *         (300 &times; 100 pixels);</li>
+ *     <li>Margin: 10 pixels;</li>
+ *     <li>Charset: UTF-8.</li>
  * </ul>
- * {@link BarcodeFormat} 必须由调用方显式指定（{@link #builder(String, BarcodeFormat)}）。
  *
- * <p>校验：content 非空白；width/height 大于 0、margin 非负；format、charset 非空。
+ * <p>The {@link BarcodeFormat} must be specified explicitly via
+ * {@link #builder(String, BarcodeFormat)}.</p>
+ *
+ * <p>Validation: {@code content} must not be blank; {@code width} and
+ * {@code height} must be positive; {@code margin} must be non-negative;
+ * {@code format} and {@code charset} must not be {@code null}.</p>
+ *
+ * @author [@Loong Wan](https://github.com/loong10k)
+ * @since 3.0.0
+ * @see com.google.zxing.BarCodes
  */
 @Getter
 public final class BarCodeRequest {
 
-    /** 默认输出宽度（像素）。 */
+    /** Default output width in pixels. */
     public static final int DEFAULT_WIDTH = 300;
-    /** 默认输出高度（像素）。 */
+    /** Default output height in pixels. */
     public static final int DEFAULT_HEIGHT = 100;
 
     private final String content;
@@ -54,16 +63,18 @@ public final class BarCodeRequest {
     }
 
     /**
-     * @param content 编码内容
-     * @param format   条码格式
-     * @return 新 Builder
+     * Creates a new {@link Builder} with the given content and barcode format.
+     *
+     * @param content the payload to encode
+     * @param format  the barcode format; must not be {@code null}
+     * @return a new builder instance
      */
     public static Builder builder(String content, BarcodeFormat format) {
         return new Builder(content, format);
     }
 
     /**
-     * 一维条形码请求链式构造器。
+     * Fluent builder for {@link BarCodeRequest} instances.
      */
     public static final class Builder {
 
@@ -80,9 +91,11 @@ public final class BarCodeRequest {
         }
 
         /**
-         * @param width  宽（像素），必须大于 0
-         * @param height 高（像素），必须大于 0
-         * @return 当前 builder
+         * Sets the output dimensions.
+         *
+         * @param width  the width in pixels; must be positive
+         * @param height the height in pixels; must be positive
+         * @return this builder
          */
         public Builder size(int width, int height) {
             this.width = width;
@@ -91,8 +104,10 @@ public final class BarCodeRequest {
         }
 
         /**
-         * @param margin 留白（像素），非负
-         * @return 当前 builder
+         * Sets the quiet-zone margin.
+         *
+         * @param margin the margin in pixels; must be non-negative
+         * @return this builder
          */
         public Builder margin(int margin) {
             this.margin = margin;
@@ -100,8 +115,10 @@ public final class BarCodeRequest {
         }
 
         /**
-         * @param charset 字符集；不能为 {@code null}
-         * @return 当前 builder
+         * Sets the character set used for encoding.
+         *
+         * @param charset the charset; must not be {@code null}
+         * @return this builder
          */
         public Builder charset(Charset charset) {
             this.charset = charset;
@@ -109,7 +126,9 @@ public final class BarCodeRequest {
         }
 
         /**
-         * @return 不可变请求
+         * Validates and builds an immutable {@link BarCodeRequest}.
+         *
+         * @return an immutable request
          */
         public BarCodeRequest build() {
             return new BarCodeRequest(this);

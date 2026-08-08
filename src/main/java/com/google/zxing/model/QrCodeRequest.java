@@ -12,32 +12,41 @@ import com.google.zxing.frame.QrCodeFrame;
 import lombok.Getter;
 
 /**
- * 不可变的 QR Code 编码请求。
+ * Immutable QR Code encoding request.
  *
- * <p>通过 {@link #builder(String)} 创建；下列为默认值：
+ * <p>Created via {@link #builder(String)}. Defaults:</p>
  * <ul>
- *     <li>宽高：{@link #DEFAULT_SIZE}（256 像素）；</li>
- *     <li>margin：2；</li>
- *     <li>charset：{@link StandardCharsets#UTF_8}；</li>
- *     <li>纠错：{@link ErrorCorrectionLevel#M}；</li>
- *     <li>格式：{@link QrCodeImageFormat#PNG}；</li>
- *     <li>样式：{@link QrCodeStyle#monochrome()}；</li>
- *     <li>Logo：{@code null}；调用 {@link Builder#logo(QrCodeLogo)} 自动将纠错升级到
- *         {@link ErrorCorrectionLevel#H} 以保留容错空间。</li>
- *     <li>自检：默认关闭。</li>
+ *     <li>Dimensions: {@link #DEFAULT_SIZE} (256 pixels);</li>
+ *     <li>Margin: 2;</li>
+ *     <li>Charset: {@link StandardCharsets#UTF_8};</li>
+ *     <li>Error correction: {@link ErrorCorrectionLevel#M};</li>
+ *     <li>Format: {@link QrCodeImageFormat#PNG};</li>
+ *     <li>Style: {@link QrCodeStyle#monochrome()};</li>
+ *     <li>Logo: {@code null}; calling {@link Builder#logo(QrCodeLogo)}
+ *         automatically upgrades error correction to
+ *         {@link ErrorCorrectionLevel#H} to preserve redundancy.</li>
+ *     <li>Self-check: disabled by default.</li>
  * </ul>
  *
- * <p>构造器会校验：
+ * <p>Validation:</p>
  * <ul>
- *     <li>content 非空白；</li>
- *     <li>width/height 大于 0、margin 非负；</li>
- *     <li>build() 检查 charset / errorCorrectionLevel / format / style 均非 {@code null}。</li>
+ *     <li>{@code content} must not be blank;</li>
+ *     <li>{@code width} and {@code height} must be positive;
+ *         {@code margin} must be non-negative;</li>
+ *     <li>{@code build()} verifies that {@code charset},
+ *         {@code errorCorrectionLevel}, {@code format} and {@code style}
+ *         are not {@code null}.</li>
  * </ul>
+ *
+ * @author [@Loong Wan](https://github.com/loong10k)
+ * @since 3.0.0
+ * @see QrCodeOutput
+ * @see com.google.zxing.QrCodeEncoder
  */
 @Getter
 public final class QrCodeRequest {
 
-    /** 默认输出宽高（像素）。 */
+    /** Default output width and height in pixels. */
     public static final int DEFAULT_SIZE = 256;
 
     private final String content;
@@ -73,15 +82,17 @@ public final class QrCodeRequest {
     }
 
     /**
-     * @param content 待编码内容；不能为 {@code null} 或空白
-     * @return 新 Builder
+     * Creates a new {@link Builder} with the given content.
+     *
+     * @param content the payload to encode; must not be {@code null} or blank
+     * @return a new builder instance
      */
     public static Builder builder(String content) {
         return new Builder(content);
     }
 
     /**
-     * QR Code 请求的链式构造器。
+     * Fluent builder for {@link QrCodeRequest} instances.
      */
     public static final class Builder {
 
@@ -102,9 +113,11 @@ public final class QrCodeRequest {
         }
 
         /**
-         * @param width  宽（像素），必须大于 0
-         * @param height 高（像素），必须大于 0
-         * @return 当前 builder
+         * Sets the output dimensions.
+         *
+         * @param width  the width in pixels; must be positive
+         * @param height the height in pixels; must be positive
+         * @return this builder
          */
         public Builder size(int width, int height) {
             this.width = width;
@@ -113,8 +126,10 @@ public final class QrCodeRequest {
         }
 
         /**
-         * @param margin 边距（像素），必须大于等于 0
-         * @return 当前 builder
+         * Sets the quiet-zone margin.
+         *
+         * @param margin the margin in pixels; must be non-negative
+         * @return this builder
          */
         public Builder margin(int margin) {
             this.margin = margin;
@@ -122,8 +137,10 @@ public final class QrCodeRequest {
         }
 
         /**
-         * @param charset 字符集；不能为 {@code null}
-         * @return 当前 builder
+         * Sets the character set for encoding.
+         *
+         * @param charset the charset; must not be {@code null}
+         * @return this builder
          */
         public Builder charset(Charset charset) {
             this.charset = charset;
@@ -131,8 +148,10 @@ public final class QrCodeRequest {
         }
 
         /**
-         * @param errorCorrectionLevel 纠错级别；不能为 {@code null}
-         * @return 当前 builder
+         * Sets the error correction level.
+         *
+         * @param errorCorrectionLevel the level; must not be {@code null}
+         * @return this builder
          */
         public Builder errorCorrectionLevel(ErrorCorrectionLevel errorCorrectionLevel) {
             this.errorCorrectionLevel = errorCorrectionLevel;
@@ -140,8 +159,10 @@ public final class QrCodeRequest {
         }
 
         /**
-         * @param format 输出格式；不能为 {@code null}
-         * @return 当前 builder
+         * Sets the output format.
+         *
+         * @param format the format; must not be {@code null}
+         * @return this builder
          */
         public Builder format(QrCodeImageFormat format) {
             this.format = format;
@@ -149,8 +170,10 @@ public final class QrCodeRequest {
         }
 
         /**
-         * @param style 颜色样式；不能为 {@code null}
-         * @return 当前 builder
+         * Sets the colour style.
+         *
+         * @param style the style; must not be {@code null}
+         * @return this builder
          */
         public Builder style(QrCodeStyle style) {
             this.style = style;
@@ -158,11 +181,12 @@ public final class QrCodeRequest {
         }
 
         /**
-         * 设置 Logo。传入非 {@code null} 时会自动把纠错升级到 {@link ErrorCorrectionLevel#H}，
-         * 以保留足够的容错空间。
+         * Sets the logo. When a non-{@code null} logo is provided, the error
+         * correction level is automatically upgraded to
+         * {@link ErrorCorrectionLevel#H} to preserve redundancy.
          *
-         * @param logo Logo；可为 {@code null}
-         * @return 当前 builder
+         * @param logo the logo; may be {@code null}
+         * @return this builder
          */
         public Builder logo(QrCodeLogo logo) {
             this.logo = logo;
@@ -173,8 +197,10 @@ public final class QrCodeRequest {
         }
 
         /**
-         * @param frame 可选外套壳
-         * @return 当前 builder
+         * Sets an optional decorative outer frame.
+         *
+         * @param frame the frame; may be {@code null}
+         * @return this builder
          */
         public Builder frame(QrCodeFrame frame) {
             this.frame = frame;
@@ -182,8 +208,10 @@ public final class QrCodeRequest {
         }
 
         /**
-         * @param selfCheck 是否在编码后立即反向解码校验内容
-         * @return 当前 builder
+         * Enables or disables self-check (round-trip decode after encoding).
+         *
+         * @param selfCheck {@code true} to enable self-check
+         * @return this builder
          */
         public Builder selfCheck(boolean selfCheck) {
             this.selfCheck = selfCheck;
@@ -191,7 +219,10 @@ public final class QrCodeRequest {
         }
 
         /**
-         * @return 不可变请求
+         * Validates and builds an immutable {@link QrCodeRequest}.
+         *
+         * @return an immutable request
+         * @throws IllegalArgumentException if any required field is {@code null}
          */
         public QrCodeRequest build() {
             if (Objects.isNull(charset) || Objects.isNull(errorCorrectionLevel)

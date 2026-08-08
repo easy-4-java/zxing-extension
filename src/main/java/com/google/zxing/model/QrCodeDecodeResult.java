@@ -7,18 +7,24 @@ import com.google.zxing.ResultMetadataType;
 import com.google.zxing.ResultPoint;
 
 /**
- * 不可变的 QR Code 解码结果。语义上与 {@link CodeResult} 等价，仅在静态类型系统中区分 QR 子集。
+ * Immutable QR Code decode result. Semantically equivalent to {@link CodeResult},
+ * but statically typed to distinguish the QR subset in the type system.
+ *
+ * @author [@Loong Wan](https://github.com/loong10k)
+ * @since 3.0.0
+ * @see CodeResult
+ * @see QrCodeDecodeRequest
  */
 public final class QrCodeDecodeResult extends CodeResult {
 
     /**
-     * 透传给 {@link CodeResult}。
+     * Delegates all arguments to {@link CodeResult}.
      *
-     * @param text     文本
-     * @param format   格式
-     * @param rawBytes 原始字节
-     * @param points   定位点
-     * @param metadata 元数据
+     * @param text     the decoded text
+     * @param format   the barcode format
+     * @param rawBytes the raw bytes
+     * @param points   the result points
+     * @param metadata the result metadata
      */
     public QrCodeDecodeResult(String text, BarcodeFormat format, byte[] rawBytes, ResultPoint[] points,
             Map<ResultMetadataType, Object> metadata) {
