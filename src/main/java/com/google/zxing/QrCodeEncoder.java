@@ -7,31 +7,40 @@ import com.google.zxing.model.QrCodeOutput;
 import com.google.zxing.model.QrCodeRequest;
 
 /**
- * 框架无关的 QR Code 编码器接口。
+ * Framework-agnostic QR Code encoder SPI.
  *
- * <p>实现需遵循语义：
+ * <p>Implementations must honour the following contract:</p>
  * <ul>
- *     <li>{@link #encode(QrCodeRequest)} 必须返回不可变的 {@link QrCodeOutput}。</li>
- *     <li>默认的 {@link #encode(QrCodeRequest, OutputStream)} 不会关闭调用方传入的流。</li>
+ *   <li>{@link #encode(QrCodeRequest)} returns an <strong>immutable</strong>
+ *       {@link QrCodeOutput}.</li>
+ *   <li>The default {@link #encode(QrCodeRequest, OutputStream)} does not
+ *       close the caller-supplied stream.</li>
  * </ul>
+ *
+ * @author [@Loong Wan](https://github.com/loong10k)
+ * @since 3.0.0
+ * @see QrCodeRequest
+ * @see QrCodeOutput
  */
 public interface QrCodeEncoder {
 
     /**
-     * 根据请求生成对应的编码输出。
+     * Encodes the supplied request into a {@link QrCodeOutput}.
      *
-     * @param request 编码请求；不能为 {@code null}
-     * @return 不可变的编码结果
-     * @throws com.google.zxing.exception.QrCodeException 参数无效、超容量或渲染失败时抛出
+     * @param request the encode request; must not be {@code null}
+     * @return an immutable, non-{@code null} encode result
+     * @throws com.google.zxing.exception.QrCodeException when the request is
+     *         invalid, content exceeds capacity, or rendering fails
      */
     QrCodeOutput encode(QrCodeRequest request);
 
     /**
-     * 便捷方法：将 {@link #encode(QrCodeRequest)} 的输出写入流。该方法不会关闭调用方传入的流。
+     * Convenience method: writes the bytes of {@link #encode(QrCodeRequest)}
+     * into the supplied stream. The stream is not closed by this method.
      *
-     * @param request     编码请求
-     * @param outputStream 调用方持有的输出流
-     * @throws IOException 当底层写入失败时抛出
+     * @param request      the encode request
+     * @param outputStream caller-owned output stream; must not be {@code null}
+     * @throws IOException when the underlying write fails
      */
     default void encode(QrCodeRequest request, OutputStream outputStream) throws IOException {
         encode(request).writeTo(outputStream);

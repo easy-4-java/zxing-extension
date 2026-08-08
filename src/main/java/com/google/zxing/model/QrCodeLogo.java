@@ -7,18 +7,25 @@ import java.util.Objects;
 import lombok.Getter;
 
 /**
- * 不可变的 QR Logo 叠加配置。
+ * Immutable QR Code logo overlay configuration.
  *
- * <p>默认值：
+ * <p>Defaults:</p>
  * <ul>
- *     <li>{@code padding = 4}；</li>
- *     <li>{@code cornerRadius = 8}；</li>
- *     <li>{@code backgroundColor = Color.WHITE}。</li>
+ *     <li>{@code padding = 4};</li>
+ *     <li>{@code cornerRadius = 8};</li>
+ *     <li>{@code backgroundColor = Color.WHITE}.</li>
  * </ul>
  *
- * <p>Logo 在编码时会受到 QR 区域 20% 长宽的限制（{@code DefaultQrCodeEncoder#MAX_LOGO_RATIO}）。
+ * <p>The logo is subject to a 20% width/height limit relative to the QR
+ * region ({@code DefaultQrCodeEncoder#MAX_LOGO_RATIO}).</p>
  *
- * <p>校验：image 非空；width/height/padding/cornerRadius 均非负；backgroundColor 非空。
+ * <p>Validation: {@code image} must not be {@code null}; {@code width},
+ * {@code height}, {@code padding} and {@code cornerRadius} must be
+ * non-negative; {@code backgroundColor} must not be {@code null}.</p>
+ *
+ * @author [@Loong Wan](https://github.com/loong10k)
+ * @since 3.0.0
+ * @see QrCodeRequest
  */
 @Getter
 public final class QrCodeLogo {
@@ -43,15 +50,17 @@ public final class QrCodeLogo {
     }
 
     /**
-     * @param image Logo 图片；不能为 {@code null}
-     * @return 新 Builder
+     * Creates a new {@link Builder} with the given logo image.
+     *
+     * @param image the logo image; must not be {@code null}
+     * @return a new builder instance
      */
     public static Builder builder(BufferedImage image) {
         return new Builder(image);
     }
 
     /**
-     * Logo 链式构造器。
+     * Fluent builder for {@link QrCodeLogo} instances.
      */
     public static final class Builder {
 
@@ -67,9 +76,12 @@ public final class QrCodeLogo {
         }
 
         /**
-         * @param width  宽（像素），可为 0 → 使用原图尺寸与 20% 上限的较小者
-         * @param height 高（像素），可为 0
-         * @return 当前 builder
+         * Sets the explicit logo dimensions. A value of 0 means the encoder
+         * will use the smaller of the original image size and the 20% limit.
+         *
+         * @param width  the width in pixels; non-negative
+         * @param height the height in pixels; non-negative
+         * @return this builder
          */
         public Builder size(int width, int height) {
             this.width = width;
@@ -78,8 +90,10 @@ public final class QrCodeLogo {
         }
 
         /**
-         * @param padding 四周留白（像素），非负
-         * @return 当前 builder
+         * Sets the padding around the logo.
+         *
+         * @param padding the padding in pixels; non-negative
+         * @return this builder
          */
         public Builder padding(int padding) {
             this.padding = padding;
@@ -87,8 +101,10 @@ public final class QrCodeLogo {
         }
 
         /**
-         * @param cornerRadius 圆角半径（像素），非负
-         * @return 当前 builder
+         * Sets the corner radius of the background rectangle.
+         *
+         * @param cornerRadius the corner radius in pixels; non-negative
+         * @return this builder
          */
         public Builder cornerRadius(int cornerRadius) {
             this.cornerRadius = cornerRadius;
@@ -96,8 +112,10 @@ public final class QrCodeLogo {
         }
 
         /**
-         * @param backgroundColor 背景色；不能为 {@code null}
-         * @return 当前 builder
+         * Sets the background colour drawn behind the logo.
+         *
+         * @param backgroundColor the background colour; must not be {@code null}
+         * @return this builder
          */
         public Builder backgroundColor(Color backgroundColor) {
             this.backgroundColor = backgroundColor;
@@ -105,7 +123,9 @@ public final class QrCodeLogo {
         }
 
         /**
-         * @return 不可变 Logo 配置
+         * Validates and builds an immutable {@link QrCodeLogo}.
+         *
+         * @return an immutable logo configuration
          */
         public QrCodeLogo build() {
             return new QrCodeLogo(this);
