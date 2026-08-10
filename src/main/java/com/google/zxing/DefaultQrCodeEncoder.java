@@ -61,7 +61,7 @@ import com.google.zxing.model.QrCodeStyle;
  * <p>Every ZXing / IO exception is translated into a {@link QrCodeException}
  * carrying a stable {@link QrCodeErrorCode}.</p>
  *
- * @author [@Loong Wan](https://github.com/loong10k)
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
  * @since 3.0.0
  * @see QrCodeEncoder
  * @see QrCodeRequest

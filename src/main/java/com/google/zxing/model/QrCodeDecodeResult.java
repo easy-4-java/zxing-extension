@@ -10,7 +10,7 @@ import com.google.zxing.ResultPoint;
  * Immutable QR Code decode result. Semantically equivalent to {@link CodeResult},
  * but statically typed to distinguish the QR subset in the type system.
  *
- * @author [@Loong Wan](https://github.com/loong10k)
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
  * @since 3.0.0
  * @see CodeResult
  * @see QrCodeDecodeRequest

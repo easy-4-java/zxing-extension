@@ -31,7 +31,7 @@ import com.google.zxing.source.MatrixToImageWriter;
  * streams opened by {@link #read(Path)} and {@link #toPng(BitMatrix)} are
  * closed automatically via try-with-resources.</p>
  *
- * @author [@Loong Wan](https://github.com/loong10k)
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
  * @since 3.0.0
  * @see CodeException
  */

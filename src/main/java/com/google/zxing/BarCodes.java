@@ -46,7 +46,7 @@ import com.google.zxing.source.BufferedImageLuminanceSource;
  * exposes an immutable {@link Set} of supported formats; concurrent calls are
  * safe.</p>
  *
- * @author [@Loong Wan](https://github.com/loong10k)
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
  * @since 3.0.0
  * @see BarCodeRequest
  * @see com.google.zxing.MultiFormatWriter

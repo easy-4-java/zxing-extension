@@ -33,7 +33,7 @@ import com.google.zxing.common.BitMatrix;
  * libraries ({@code javax.imageio.ImageIO}).</p>
  *
  * @author Sean Owen
- * @author [@Loong Wan](https://github.com/loong10k)
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
  * @since 3.0.0
  * @see BufferedImageLuminanceSource
  * @see BitMatrix

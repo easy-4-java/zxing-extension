@@ -23,7 +23,7 @@ package com.google.zxing.exception;
  * code; callers should branch on the exception type and inspect the message
  * and cause for details.</p>
  *
- * @author [@Loong Wan](https://github.com/loong10k)
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
  * @since 3.0.0
  * @see QrCodeException
  */

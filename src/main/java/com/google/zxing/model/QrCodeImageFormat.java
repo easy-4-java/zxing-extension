@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
  * {@link #SVG} is hand-written by {@code DefaultQrCodeEncoder} and has no
  * corresponding {@link javax.imageio.ImageIO} writer.</p>
  *
- * @author [@Loong Wan](https://github.com/loong10k)
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
  * @since 3.0.0
  * @see QrCodeOutput
  */

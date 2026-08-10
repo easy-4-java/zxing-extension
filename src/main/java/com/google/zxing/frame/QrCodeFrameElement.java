@@ -7,7 +7,7 @@ package com.google.zxing.frame;
  * bounds and z-order. {@link QrCodeFrame} uses these values to enforce full
  * containment within the canvas and to sort elements by z-order.</p>
  *
- * @author [@Loong Wan](https://github.com/loong10k)
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
  * @since 3.0.0
  * @see QrCodeFrame
  * @see QrCodeBlockElement

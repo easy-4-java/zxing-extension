@@ -43,7 +43,7 @@ import com.google.zxing.model.QrCodeDecodeResult;
  * {@link QrCodeErrorCode#QRCODE_DECODE_NOT_FOUND} code so callers can branch
  * on the cause without parsing messages.</p>
  *
- * @author [@Loong Wan](https://github.com/loong10k)
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
  * @since 3.0.0
  * @see QrCodeDecoder
  * @see QrCodeDecodeRequest

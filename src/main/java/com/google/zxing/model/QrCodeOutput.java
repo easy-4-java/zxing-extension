@@ -7,7 +7,7 @@ import java.util.Objects;
  * Immutable QR Code encoding output. Extends {@link CodeOutput} with a
  * {@link QrCodeImageFormat} discriminator.
  *
- * @author [@Loong Wan](https://github.com/loong10k)
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
  * @since 3.0.0
  * @see CodeOutput
  * @see QrCodeImageFormat

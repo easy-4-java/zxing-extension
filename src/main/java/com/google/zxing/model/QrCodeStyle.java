@@ -23,7 +23,7 @@ import lombok.Getter;
  * {@link #colorAt(double)} clamps the ratio to [0, 1] before interpolating;
  * for non-gradient styles it always returns {@code foregroundColor}.</p>
  *
- * @author [@Loong Wan](https://github.com/loong10k)
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
  * @since 3.0.0
  * @see QrCodeRequest
  */

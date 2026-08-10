@@ -26,7 +26,7 @@ import java.awt.image.WritableRaster;
  * @author dswitkin@google.com (Daniel Switkin)
  * @author Sean Owen
  * @author code@elektrowolle.de (Wolfgang Jung)
- * @author [@Loong Wan](https://github.com/loong10k)
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
  * @since 3.0.0
  * @see LuminanceSource
  * @see MatrixToImageWriter

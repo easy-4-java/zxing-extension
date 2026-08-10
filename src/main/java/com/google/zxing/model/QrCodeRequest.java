@@ -38,7 +38,7 @@ import lombok.Getter;
  *         are not {@code null}.</li>
  * </ul>
  *
- * @author [@Loong Wan](https://github.com/loong10k)
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
  * @since 3.0.0
  * @see QrCodeOutput
  * @see com.google.zxing.QrCodeEncoder

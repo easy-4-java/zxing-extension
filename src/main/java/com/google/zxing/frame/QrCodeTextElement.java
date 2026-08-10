@@ -16,7 +16,7 @@ import lombok.Getter;
  * <p>Validation: {@code text} must not be blank; {@code fontSize} must be
  * positive; {@code color} must not be {@code null}.</p>
  *
- * @author [@Loong Wan](https://github.com/loong10k)
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
  * @since 3.0.0
  * @see QrCodeFrameElement
  * @see QrCodeFrame

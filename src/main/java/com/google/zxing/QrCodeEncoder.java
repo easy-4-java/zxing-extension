@@ -17,7 +17,7 @@ import com.google.zxing.model.QrCodeRequest;
  *       close the caller-supplied stream.</li>
  * </ul>
  *
- * @author [@Loong Wan](https://github.com/loong10k)
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
  * @since 3.0.0
  * @see QrCodeRequest
  * @see QrCodeOutput

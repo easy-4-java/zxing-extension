@@ -26,7 +26,7 @@ import lombok.Getter;
  * {@code height} must be positive; {@code errorCorrectionPercent} must be in
  * the range [1, 100]; {@code margin} must be non-negative.</p>
  *
- * @author [@Loong Wan](https://github.com/loong10k)
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
  * @since 3.0.0
  * @see com.google.zxing.AztecCodes
  */

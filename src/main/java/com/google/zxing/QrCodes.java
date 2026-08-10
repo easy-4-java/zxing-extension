@@ -25,7 +25,7 @@ import com.google.zxing.model.QrCodeStyle;
  * <p>The facade does not perform any network I/O, does not load remote URLs,
  * and never holds open resources between calls.</p>
  *
- * @author [@Loong Wan](https://github.com/loong10k)
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
  * @since 3.0.0
  * @see QrCodeEncoder
  * @see QrCodeDecoder

@@ -23,7 +23,7 @@ import lombok.Getter;
  * {@code height}, {@code padding} and {@code cornerRadius} must be
  * non-negative; {@code backgroundColor} must not be {@code null}.</p>
  *
- * @author [@Loong Wan](https://github.com/loong10k)
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
  * @since 3.0.0
  * @see QrCodeRequest
  */

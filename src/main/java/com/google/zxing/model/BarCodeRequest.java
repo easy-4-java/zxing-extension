@@ -28,7 +28,7 @@ import lombok.Getter;
  * {@code height} must be positive; {@code margin} must be non-negative;
  * {@code format} and {@code charset} must not be {@code null}.</p>
  *
- * @author [@Loong Wan](https://github.com/loong10k)
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
  * @since 3.0.0
  * @see com.google.zxing.BarCodes
  */

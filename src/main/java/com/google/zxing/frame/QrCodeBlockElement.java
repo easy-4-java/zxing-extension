@@ -25,7 +25,7 @@ import lombok.Getter;
  * <p>Instances are produced via Lombok's {@code @Builder}; see
  * {@link QrCodeFrameElement} for the meaning of each accessor.</p>
  *
- * @author [@Loong Wan](https://github.com/loong10k)
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
  * @since 3.0.0
  * @see QrCodeFrameElement
  * @see QrCodeFrame
