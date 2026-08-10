@@ -52,46 +52,47 @@
 
     <!-- 版本属性定义：Java 版本、依赖版本与 Maven 插件版本统一管理 -->
     <properties>
-        <central-maven-publishing-plugin.version>0.11.0</central-maven-publishing-plugin.version>
-        <java.version>1.8</java.version>
-        <maven.compiler.source>${java.version}</maven.compiler.source>
-        <maven.compiler.target>${java.version}</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <zxing.version>3.5.4</zxing.version>
-        <commons-lang3.version>3.20.0</commons-lang3.version>
-        <slf4j.version>2.0.18</slf4j.version>
-        <lombok.version>1.18.46</lombok.version>
-        <junit.version>4.13.2</junit.version>
-        <assertj.version>3.27.7</assertj.version>
-        <maven.version>3.0</maven.version>
-        <!-- Maven Plugin versions -->
-        <maven-clean-plugin.version>3.5.0</maven-clean-plugin.version>
-        <maven-compiler-plugin.version>3.15.0</maven-compiler-plugin.version>
-        <maven-deploy-plugin.version>3.1.4</maven-deploy-plugin.version>
-        <maven-enforcer-plugin.version>3.6.3</maven-enforcer-plugin.version>
-        <maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
-        <maven-install-plugin.version>3.1.4</maven-install-plugin.version>
-        <maven-jar-plugin.version>3.5.0</maven-jar-plugin.version>
-        <maven-javadoc-plugin.version>3.11.2</maven-javadoc-plugin.version>
-        <maven-release-plugin.version>3.3.1</maven-release-plugin.version>
-        <maven-resources-plugin.version>3.5.0</maven-resources-plugin.version>
-        <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
-        <maven-source-plugin.version>3.4.0</maven-source-plugin.version>
-        <maven-central-publishing-plugin.version>0.11.0</maven-central-publishing-plugin.version>
-        <checker-qual.version>3.48.3</checker-qual.version>
-        <jacoco.version>0.8.12</jacoco.version>
-        <jacoco.bundle.line.minimum>1.00</jacoco.bundle.line.minimum>
-        <jacoco.line.minimum>1.00</jacoco.line.minimum>
-        <jacoco.branch.minimum>1.00</jacoco.branch.minimum>
-        <jacoco.branch.minimum.io>0.75</jacoco.branch.minimum.io>
-        <jacoco.line.minimum.io>0.90</jacoco.line.minimum.io>
-        <jacoco.branch.minimum.aztec>0.45</jacoco.branch.minimum.aztec>
-        <jacoco.line.minimum.image>0.70</jacoco.line.minimum.image>
-        <maven-jacoco-plugin.version>0.8.15</maven-jacoco-plugin.version>
-    
-		<junit-jupiter.version>5.11.4</junit-jupiter.version>
-		<commons-lang.version>2.6</commons-lang.version></properties>
+            <java.version>1.8</java.version>
+            <maven.compiler.source>${java.version}</maven.compiler.source>
+            <maven.compiler.target>${java.version}</maven.compiler.target>
+            <maven.version>3.0</maven.version>
+            <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+            <!-- Dependency versions -->
+            <assertj.version>3.27.7</assertj.version>
+            <central-maven-publishing-plugin.version>0.11.0</central-maven-publishing-plugin.version>
+            <checker-qual.version>3.48.3</checker-qual.version>
+            <commons-lang3.version>3.20.0</commons-lang3.version>
+            <commons-lang.version>2.6</commons-lang.version>
+            <jacoco.branch.minimum>1.00</jacoco.branch.minimum>
+            <jacoco.branch.minimum.aztec>0.45</jacoco.branch.minimum.aztec>
+            <jacoco.branch.minimum.io>0.75</jacoco.branch.minimum.io>
+            <jacoco.bundle.line.minimum>1.00</jacoco.bundle.line.minimum>
+            <jacoco.line.minimum>1.00</jacoco.line.minimum>
+            <jacoco.line.minimum.image>0.70</jacoco.line.minimum.image>
+            <jacoco.line.minimum.io>0.90</jacoco.line.minimum.io>
+            <jacoco.version>0.8.12</jacoco.version>
+            <junit-jupiter.version>5.11.4</junit-jupiter.version>
+            <junit.version>4.13.2</junit.version>
+            <lombok.version>1.18.46</lombok.version>
+            <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+            <slf4j.version>2.0.18</slf4j.version>
+            <zxing.version>3.5.4</zxing.version>
+            <!-- Maven Plugin versions -->
+            <maven-central-publishing-plugin.version>0.11.0</maven-central-publishing-plugin.version>
+            <maven-clean-plugin.version>3.5.0</maven-clean-plugin.version>
+            <maven-compiler-plugin.version>3.15.0</maven-compiler-plugin.version>
+            <maven-deploy-plugin.version>3.1.4</maven-deploy-plugin.version>
+            <maven-enforcer-plugin.version>3.6.3</maven-enforcer-plugin.version>
+            <maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
+            <maven-install-plugin.version>3.1.4</maven-install-plugin.version>
+            <maven-jacoco-plugin.version>0.8.15</maven-jacoco-plugin.version>
+            <maven-jar-plugin.version>3.5.0</maven-jar-plugin.version>
+            <maven-javadoc-plugin.version>3.11.2</maven-javadoc-plugin.version>
+            <maven-release-plugin.version>3.3.1</maven-release-plugin.version>
+            <maven-resources-plugin.version>3.5.0</maven-resources-plugin.version>
+            <maven-source-plugin.version>3.4.0</maven-source-plugin.version>
+            <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
+    </properties>
 
     <!-- 依赖版本统一管理（dependencyManagement） -->
     <dependencyManagement>
@@ -728,7 +729,8 @@
                 <jdk>[1.8,)</jdk>
             </activation>
             <properties>
-                <additionalparam>-Xdoclint:none -Xlint:unchecked</additionalparam>
+                    <!-- Dependency versions -->
+                    <additionalparam>-Xdoclint:none -Xlint:unchecked</additionalparam>
             </properties>
         </profile>
         <!-- 发布到 Maven Central Portal：mvn -Prelease deploy（GPG 签名 + 源码 + Javadoc + Central 发布插件） -->
