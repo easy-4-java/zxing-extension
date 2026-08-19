@@ -77,6 +77,7 @@
         <maven-resources-plugin.version>3.5.0</maven-resources-plugin.version>
         <maven-source-plugin.version>3.4.0</maven-source-plugin.version>
         <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
+    
     </properties>
     <!-- 依赖版本统一管理（dependencyManagement） -->
     <dependencyManagement>
@@ -206,7 +207,8 @@
             <properties>
                 <!-- Dependency versions -->
                 <additionalparam>-Xdoclint:none -Xlint:unchecked</additionalparam>
-            </properties>
+            
+    </properties>
         </profile>
         <!-- 发布到 Maven Central Portal：mvn -Prelease deploy（GPG 签名 + 源码 + Javadoc + Central 发布插件） -->
         <profile>
