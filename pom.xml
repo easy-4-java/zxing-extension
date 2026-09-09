@@ -42,7 +42,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!-- Dependency versions -->
         <assertj.version>3.27.7</assertj.version>
-        <central-maven-publishing-plugin.version>0.11.0</central-maven-publishing-plugin.version>
+        <maven-central-publishing-plugin.version>0.11.0</maven-central-publishing-plugin.version>
         <checker-qual.version>3.48.3</checker-qual.version>
         <commons-lang3.version>3.20.0</commons-lang3.version>
         <commons-lang.version>2.6</commons-lang.version>
@@ -61,7 +61,6 @@
         <slf4j.version>2.0.18</slf4j.version>
         <zxing.version>3.5.4</zxing.version>
         <!-- Maven Plugin versions -->
-        <maven-central-publishing-plugin.version>0.11.0</maven-central-publishing-plugin.version>
         <maven-clean-plugin.version>3.5.0</maven-clean-plugin.version>
         <maven-compiler-plugin.version>3.15.0</maven-compiler-plugin.version>
         <maven-deploy-plugin.version>3.1.4</maven-deploy-plugin.version>
